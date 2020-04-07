@@ -1,0 +1,425 @@
+% #################### Juego de damas chinas en Prolog
+
+miembro ( X , [ X | _ ]) .
+miembro ( X , [ _ | L ]) : - miembro ( X , L ) .
+
+% ================= Herramientas
+impar ( X ) : -  Y is X  mod  2 , Y == 0 .
+par ( X ) : - not (impar ( X )) .
+
+% ================= Modelado del tablero
+% El tablero está limitado a 2 triángulos de altura 9 cajas, que corresponde a un tablero
+% para 2 jugadores, modelado de la siguiente manera
+% x
+% xx
+% xxx
+% xxxx
+% xxxxx
+% xxxxxx
+% xxxxxxx
+% xxxxxxxx
+% xxxxxxxxx
+% xxxxxxxx
+% ... 
+% x
+
+
+% ---------------- ¿Una caja pertenece al tablero?
+caja ( X , Y ) : -  D is abs ( Y - 9 ), Y > 0 , Y = < 17 , X > 0 , X = < ( 9 - D ) .
+
+diferente ( X1 , Y1 , X2 , Y2 ) : -  X1 \ == X2 ; Y1 \ == Y2 .
+
+% ---------------- ¿Las dos cajas pertenecen al tablero?
+enlace ( X1 , Y1 , X2 , Y2 ) : - (not (recuadro ( X1 , Y1 )); not (recuadro ( X2 , Y2 ))) ,! , Fail .
+% ---------------- Enlace horizontal
+enlace ( X1 , Y1 , X2 , Y2 ) : -  Y1 == Y2 , Z is abs ( X1 - X2 ), Z  ==  1 .
+% ---------------- Enlace vertical (diagonal izquierda en juego real)
+enlace ( X1 , Y1 , X2 , Y2 ) : -  X1 == X2 , Z is abs ( Y1 - Y2 ), Z  ==  1 .
+
+% ---------------- Diagonal inferior de la placa
+enlace ( X1 , Y1 , X2 , Y2 ) : -  Y1  <  9 , W is Y2 - Y1 , W  ==  1 , Z es X2 - X1 , Z  ==  1 .
+enlace ( X1 , Y1 , X2 , Y2 ) : -  Y1  = <  9 , W is Y2 - Y1 , W  ==  - 1 , Z es X2 - X1 , Z  ==  - 1 .
+
+% ---------------- Diagonal superior
+enlace ( X1 , Y1 , X2 , Y2 ) : -  Y1  > =  9 , W es Y2 - Y1 , W  ==  1 , Z es X1 - X2 , Z  ==  1 .
+enlace ( X1 , Y1 , X2 , Y2 ) : -  Y1  >  9 , W es Y2 - Y1 , W  ==  - 1 , Z es X1 - X2 , Z  ==  - 1 .
+
+
+% ================ Estado inicial: colocación de los peones
+
+: - dynamic computadora/ 2 .
+computadora ( 1 , 17 ) .
+computadora ( 1 , 16 ) .
+computadora ( 2 , 16 ) .
+computadora ( 1 , 15 ) .
+computadora ( 2 , 15 ) .
+computadora ( 3 , 15 ) .
+computadora ( 1 , 14 ) .
+computadora ( 2 , 14 ) .
+computadora ( 3 , 14 ) .
+computadora ( 4 , 14 ) .
+
+: - dynamic jugador/ 2 .
+jugador ( 1 , 1 ) .
+jugador ( 1 , 2 ) .
+jugador ( 2 , 2 ) .
+jugador ( 1 , 3 ) .
+jugador ( 2 , 3 ) .
+jugador ( 3 , 3 ) .
+jugador ( 1 , 4 ) .
+jugador ( 2 , 4 ) .
+jugador ( 3 , 4 ) .
+jugador ( 4 , 4 ) .
+
+
+% ================= Estados de la caja: libre u ocupado
+libre ( X , Y ) : - caja ( X , Y ), not (jugador ( X , Y )), not (computadora ( X , Y )) .
+ocupado ( X , Y ) : - caja ( X , Y ), (jugador ( X , Y ); computadora ( X , Y )) .
+
+
+% ================ Accesibilidad de cajas
+% Los desplazamientos se describen en relación con el modelado de la plataforma.
+% Tal vez piense en eliminarlos! durante la integración de ia
+
+% ---------------- Muévete con el salto en la misma línea a la derecha
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Diff es X2 - X1 , Diff == 2 , Xi es X1 + 1 , Y1 == Y2 , ocupada ( Xi , Y1 ) ! .
+% ---------------- Muévete con el salto en la misma línea de la izquierda
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Diff es X1 - X2 , Diff == 2 , Xi es X1 - 1 , Y1 == Y2 , ocupada ( Xi , Y1 ) ! .
+
+% ---------------- Parte <9 (es posible llegar a la línea 9)
+% ---------------- Desplazamiento oblicuo alto
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 < 9 , Y2 = < 9 , DiffX es X2 - X1 , DiffY es Y2 - Y1 , ( DiffX == 2 ; DiffX == 0 ), DiffY ==2 , Xi es X1 + ( DiffX / 2), Yi es Y1 + 1 , ocupada ( Xi , Yi ), ! .
+% ---------------- Bajo desplazamiento oblicuo
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 < 9 , Y2 = < 9 , DiffX es X1 - X2 , DiffY es Y1 - Y2 , ( DiffX == 2 ; DiffX == 0 ), DiffY ==2 , Xi es X1 - ( DiffX / 2), Yi es Y1 - 1 , ocupada ( Xi , Yi ), ! .
+
+
+% ---------------- Parte> 9 (es posible llegar a la línea 9)
+% ---------------- Desplazamiento oblicuo alto
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 > 9 , Y2 > = 9 , DiffX es X1 - X2 , DiffY es Y2 - Y1 , ( DiffX == 2 ; DiffX == 0 ), DiffY ==2 , X es X1 - ( DiffX / 2), Y es Y1 + 1 , ocupada ( Xi , Yi ), ! .
+% ---------------- Bajo desplazamiento oblicuo
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 > 9 , Y2 > = 9 , DiffX es X2 - X1 , DiffY es Y1 - Y2 , ( DiffX == 2 ; DiffX == 0 ), DiffY ==2 , X es X1 + ( DiffX / 2), Y es Y1 - 1 , ocupada ( Xi , Yi ), ! .
+
+% ---------------- Parte media
+% ---------------- Movimiento ascendente (2 posibilidades)
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 == 8 , Y2 == 10 , DiffX es X2 - X1 , DiffX == 1 , Yi es Y1 + 1 , ocupado ( X2 , Yi ) .
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 == 8 , Y2 == 10 , DiffX es X1 - X2 , DiffX == 1 , Yi es Y1 + 1 , ocupado ( X1 , Yi ) .
+% ---------------- Bajar (2 posibilidades)
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 == 10 , Y2 == 8 , DiffX es X2 - X1 , DiffX == 1 , Yi es Y1 - 1 , ocupado ( X2 , Yi ) .
+accesibleparsaut ( X1 , Y1 , X2 , Y2 ) : - diferente ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ), Y1 == 10 , Y2 == 8 , DiffX es X1 - X2 , DiffX == 1 , Yi es Y1 - 1 , ocupado ( X1 , Yi ) .
+
+
+accesibleCerrar ( X1 , Y1 , X2 , Y2 ) : - enlace ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ) .
+
+accesible( X1 , Y1 , X2 , Y2 ) - enlace ( X1 , Y1 , X2 , Y2 ), libre ( X2 , Y2 ) ! .
+accesible( X1 , Y1 , X2 , Y2 ) - accessibleparsaut ( X1 , Y1 , X2 , Y2 ) ! .
+
+% TODO: salto múltiple
+% ---------------- doble salto
+% accesible (X1, Y1, X2, Y2): - lista numérica (1,9, DX), lista numérica (1,17, DY), miembro (W, DX), miembro (Z, DY), autorrepaso accesible (X1, Y1 , W, Z), accesible por salto (W, Z, X2, Y2).
+% accesible (X1, Y1, X2, Y2): - lista numérica (1,9, DX), lista numérica (1,17, DY), miembro (W, DX), miembro (Z, DY), diferente (X1, Y1 , X2, Y2), acceso accesible (X1, Y1, W, Z), acceso accesible (W, Z, X2, Y2).
+
+% ================= Movimientos de peón
+% ---------------- Jugador
+moverjugador( X1 , Y1 , X2 , Y2 ) : - jugador ( X1 , Y1 ), accesible ( X1 , Y1 , X2 , Y2 ), retract(jugador ( X1 , Y1 )), assert(jugador ( X2 , Y2 )), drawplateau ( 1 ), ! .
+% ---------------- Computadora
+deplacerordi ( X1 , Y1 , X2 , Y2 ) : - computadora ( X1 , Y1 ), accesible ( X1 , Y1 , X2 , Y2 ), retract(computadora ( X1 , Y1 )), assert(computadora ( X2 , Y2 )), drawplateau ( 1 ), ! .
+
+
+% ================= Mostrar
+
+% Draw o si el cuadro existe, 1 para la CPU, 2 para el jugador
+draw( A , B ) : - computadora ( A , B ), write( 1 ) ,! .
+draw( A , B ) : - jugador ( A , B ), write( 2 ) ,! .
+draw( A , B ) : - caja( A , B ), write( . ),!.
+draw( _ , _ ) : -  write( - ) .
+
+% ---------------- Dibuja una línea
+drawline( Y , NB_CASES , I ) : - ( I = < ( 9 - NB_CASES ), write ( '' ), J es I + 1 , línea de dibujo ( Y , NB_CASES , J )); ( I > 9 , writeln ( ' ' ) ! ), ( I > ( 9 - NB_CASES ), J es I + 1, K es ( I - 9 + NB_CASES ), dibuja ( K , Y ), escribe ( '' ), dibuja ( Y , NB_CASES , J ).
+
+% ---- Pantalla pegada a la izquierda (ver modelado)
+% drawline(Y, NB_CASES, I): - (I> NB_CASES, writeln ('') ,!); (J es I + 1, draw (I, Y), drawline (Y, NB_CASES, J)).
+
+% ----------------- Dibuja todo el tablero (en la dirección correcta)
+drawplateau( 18 ) .
+drawplateau( Y ) : -  NB_CASES es ( 9  - abs ( 9 - Y )), K es 18 - Y , DrawLine ( K , NB_CASES , 1 ), J es Y + 1 , drawplateau ( J ) ! .
+
+
+% ================= Mecanismos de juego
+jugar ( X1 , Y1 , X2 , Y2 ) : - moverjugador ( X1 , Y1 , X2 , Y2 ) .
+victoryPlayer  : jugador ( 1 , 17 ), jugador ( 1 , 16 ), jugador ( 2 , 16 ), jugador ( 1 , 15 ), jugador ( 2 , 15 ), jugador ( 3 , 15 ), jugador ( 1 , 14 ), jugador ( 2 , 14 ), jugador ( 3 , 14 ), jugador ( 4 , 14 ) .
+victoryOrdi  : - computadora ( 1 , 1 ), computadora ( 1 , 2 ), computadora ( 2 , 2 ), computadora ( 1 , 3 ), computadora ( 2 , 3 ), computadora ( 3 , 3 ), computadora ( 1 , 4) ), computadora ( 2 , 4 ), computadora ( 3 , 4 ), computadora ( 4 , 4 ) .
+
+% ================ Por simplicidad, prohibimos los saltos hacia atrás
+% ---------------- Caja posterior para AI
+saltosIA ( _ , Y1 , _ , Y2 ) : - ( Y2 > Y1 ) .
+% ---------------- Caja posterior para el jugador
+saltosPlayer ( _ , Y1 , _ , Y2 ) : - ( Y1 < Y2 ) .
+
+
+
+% ================= IA
+% No podemos volver
+% Utilizamos el algoritmo min max alpha beta
+
+% ---------------- Herramientas
+% ---------------- Max y Min entre 2 elementos
+max ( A , A , A ) .
+Max ( A , B , A ) : -  A > B .
+max ( A , B , B ) : -  A < B . 
+
+min ( A , A , A ) .
+min ( A , B , A ) : -  A < B .
+min ( A , B , B ) : -  A > B .
+
+% ---------------- Incremento
+incr ( P , P2 ) : -  P2 es P + 1 .
+% ---------------- Disminución
+decr ( P , P2 ) : -  P2 es P - 1 .
+% ---------------- Lista vacía
+vacío ( [] ) .
+% ---------------- Tamaño de la lista
+tamaño ( [] , 0 ) .
+tamaño ([ _ | Q ], T ) : - tamaño ( Q , T2 ), T es T2 + 1 .
+
+% ---------------- Siguiente jugador
+nextPlayer ( 1 , 2 ) .
+nextPlayer ( 2 , 1 ) .
+
+% ---------------- Hoja alcanzada o final del juego
+testDepth ( P , _ , _ ) : -  P  ==  0 ; victoriaPlayer ; victoria Ordi .
+
+
+% De generación de la posición como una lista de coordenadas de peones
+computadora ( Pos ) : -  findall ([ X , Y ], computadora ( X , Y ), Pos ) .
+jugador ( Pos ) : -  findall ([ X , Y ], jugador ( X , Y ), Pos ) .
+computadora ( Pos ) : - computadora ( P1 ), jugador ( P2 ), agregar ([ P1 ], [ P2 ], Pos ) .
+
+
+% ---------------- Evaluación de la posición
+% La evaluación de la situación es la suma de los valores de los peones.
+% Tomamos en cuenta 2 componentes:
+% - la distancia desde el mostrador hasta la posición final (coeff 4)
+% - movilidad para evitar peones aislados (coeff 1): al final no se tiene en cuenta
+% - la distancia desde el eje central (coeff 2)
+
+
+% ---- Movilidad de un peón
+% Estamos a favor de los peones que tienen la vecindad menos directa, es decir, tienen muchas cajas accesibles por salto
+movilidad ( X , Y , Mob ) : -  findall ( X2 , ( Z es X - 1 , W es X + 1 , lista numérica ( Z , W , DX ), Z2 es Y - 1 , W2 es Y + 1 , lista numérica ( Z2 , W2 , DY ), miembro ( X2 , DX ), miembro ( Y2 ,DY ), accesible Cerca ( X , Y , X2 , Y2 )), M ), tamaño ( M , Mob ) .
+
+% De distancia del eje = penaliza si el contador es demasiado excéntrico
+distanceAxe ( X , Y , Dist ) : -  Y > 9 , Nb es 18 - Y , Middle es Nb / 2, Dist es abs ( Middle - X ) .
+distanceAxe ( X , Y , Dist ) : -  Y = < 9 , el medio es Y / 2, Dist es abs ( medio - X ) .
+
+% ---- Evaluación de un peón
+% para ganar velocidad (por ahora), desactivamos la movilidad
+
+% evalPionOrdi (X, Y, Val): - movilidad (X, Y, M), Dist es 17-Y-1, Val es (Dist * 3) -M.
+evalPionOrdi ( X , Y , Val ) : - Distancia del eje ( X , Y , Dist ), Val es (( 18 - Y ) * 4 - Dist * 2 ) .
+
+evalPlateauOrdi ( [] , 0 ) .
+evalPlateauOrdi ([ T | Q ], Val ) : - nth1 ( 1 , T , X ), nth1 ( 2 , T , Y ), evalPionOrdi ( X , Y , Val2 ), evalPlateauOrdi ( Q , Val1 ), Val es Val1 + Val2 .
+evaluationOrdi ( Val ) : - ordenador ( Pos ) evalPlateauOrdi ( Pos , Val ) .
+
+% evalPionPlayer (X, Y, Val): - movilidad (X, Y, M), Dist es Y + 1, Val es (Dist * 3) -M.
+evalPionPlayer ( X , Y , Val ) : - Distancia del eje ( X , Y , Dist ), Val es (( Y ) * 4 - Dist * 2 ) .
+
+evalPlateauPlayer ( [] , 0 ) .
+evalPlateauPlayer ([ T | Q ], Val ) : - nth1 ( 1 , T , X ), nth1 ( 2 , T , Y ), evalPionPlayer ( X , Y , Val2 ), evalPlateauPlayer ( Q , Val1 ), Val es Val1 + Val2 .
+evaluationPlayer ( Val ) : - jugador ( Pos ) evalPlateauPlayer ( Pos , Val ) .
+
+
+% -------------- Heurística
+% ------ Progreso (distancia hasta la llegada)
+
+heur ( Pos , _ , Val , IA ) : - 
+	IA == 1 ,	
+	nth1 ( 1 , Pos , PionsOrdi ), nth1 ( 2 , Pos , PionsPlayer ),
+	heurOvancementOrdi ( PionsOrdi , ValOrdi ),
+	heurAvancementPlayer ( PionsPlayer , ValPlayer ),
+	Val es ValOrdi - ValPlayer .
+
+heur ( Pos , _ , Val , IA ) : - 
+	IA == 2 ,	
+	nth1 ( 1 , Pos , PionsOrdi ), nth1 ( 2 , Pos , PionsPlayer ),
+	heurOvancementOrdiBis ( PionsOrdi , ValOrdi ),
+	heurAvancementPlayerBis ( PionsPlayer , ValPlayer ),
+	Val es ValPlayer - ValOrdi .
+
+
+heurAPionOrdi ( X , Y , Val ) : - Distancia del eje ( X , Y , Dist ), Val es (( 18 - Y ) * 4 - Dist * 2 ) .
+heurOvancementOrdi ( [] , 0 ) .
+heurOvancementOrdi ([ T | Q ], Val ) : - 
+	nth1 ( 1 , T , X ), nth1 ( 2 , T , Y ), heurAPionOrdi ( X , Y , Val2 ),
+	heurOvancementOrdi ( Q , Val1 ), Val es Val1 + Val2 .
+
+heurAPionPlayer ( _ , Y , Val ) : -  Val es ( Y * 4 ) .
+heurAvancementPlayer ( [] , 0 ) .
+heurAvancementPlayer ([ T | Q ], Val ) : - 
+	nth1 ( 1 , T , X ), nth1 ( 2 , T , Y ), heurAPionPlayer ( X , Y , Val2 ),
+	heurAvancementPlayer ( Q , Val1 ), Val es Val1 + Val2 .
+
+
+% Para enfrentar 2 AI
+heurAPionOrdiBis ( X , Y , Val ) : - Distancia del eje ( X , Y , _ ), Val es (( 18 - Y ) * 4 ) .
+heurAvancementOrdiBis ( [] , 0 ) .
+heurAvancementOrdiBis ([ T | Q ], Val ) : - nth1 ( 1 , T , X ), nth1 ( 2 , T , Y ), heurAPionOrdiBis ( X , Y , Val2 ), heurAvancementOrdiBis ( Q , Val1 ), Val es Val1 + Val2 .
+
+heurAPionPlayerBis ( X , Y , Val ) : - Distancia del eje ( X , Y , Dist ), Val es ( Y * 4 ) - Dist * 2 .
+heurAvancementPlayerBis ( [] , 0 ) .
+heurAvancementPlayerBis ([ T | Q ], Val ) : - nth1 ( 1 , T , X ), nth1 ( 2 , T , Y ), heurAPionPlayerBis ( X , Y , Val2 ), heurAvancementPlayerBis ( Q , Val1 ), Val es Val1 + Val2 .
+
+
+
+% =================== Posiciones accesibles
+% Devuelve la lista de cuadros accesibles desde el cuadro de coordenadas X, Y
+casesAccessiblesOrdi ( X , Y , M ) : -  findall ([ X2 , Y2 ], (lista numérica ( 1 , 9 , DX ), lista numérica ( 1 , Y , DY ), miembro ( X2 , DX ), miembro ( Y2 , DY ) , accesible ( X , Y , X2 , Y2 )), M ) .
+casesAccessiblesPlayer ( X , Y , M ) : -  findall ([ X2 , Y2 ], (lista numérica ( 1 , 9 , DX ), lista numérica ( Y , 17 , DY ), miembro ( X2 , DX ), miembro ( Y2 , DY ) , accesible ( X , Y , X2 , Y2 )), M ) .
+casesAccessibles ( X , Y , M , del jugador , IA ) : -  IA == 1 , (( jugador == 1 , casesAccessiblesOrdi ( X , Y , M ) ! ); ( Jugador == 2 , casesAccessiblesPlayer ( X , Y , M ) ,! )) .
+casesAccessibles ( X , Y , M , del jugador , IA ) : -  IA == 2 , (( jugador == 2 , casesAccessiblesOrdi ( X , Y , M ) ! ); ( Jugador == 1 , casesAccessiblesPlayer ( X , Y , M ) ,! )) .
+
+% ------- Juega el peón
+simulateCoupOrdi ( Pos , X1 , Y1 , X2 , Y2 , Out ) : - restar ( Pos , [[ X1 , Y1 ]], G ), agregar ([[ X2 , Y2 ]], G , Out ) .
+
+distributionPlayer ( [] , _ , [] ) .
+distribuir jugador ([ T | Q ], Elem , Lista ) : - distribuir jugador ( Q , Elem , L2 ), agregar ([ T ], [ Elem ], L1 ), agregar ([ L1 ], L2 , Lista ) .
+
+distribuir Ordi ( [] , _ , [] ) .
+distribuir Ordi ([ T | Q ], Elem , Lista ) : - distribuir Ordi ( Q , Elem , L2 ), agregar ([ Elem ], [ T ], L1 ), agregar ([ L1 ], L2 , Lista ) .
+
+% ------- Sucesores de la posición actual = todos los próximos movimientos posibles
+succL ( [] , _ , [] ) .
+succL ([ Elem | QL ], G , Res ) : - 
+	succL ( QL , G , Res1 ),
+	agregar ([ Elem ], G , Res2 ),
+	agregar ( Res1 , [ Res2 ], Res ) .
+
+succCalc ( [] , _ , [] , _ , _ ) .
+succCalc ([ T | Q ], Pos , PosList , Player , AI ) : - 
+	nth1 ( 1 , T , Xi ), nth1 ( 2 , T , Yi ),
+	Cajas accesibles ( Xi , Yi , L , Player , AI ),
+	restar ( Pos , [[ Xi , Yi ]], G ),
+	succL ( L , G , PosList1 ),
+	succCalc ( Q , Pos , PosList2 , Player , AI ),
+	append ( PosList1 , PosList2 , PosList ) .
+
+
+% AI es útil para jugar dos IA juntas
+succ ([ Ordi , Player ], Player , PosList , IA ) : - 
+	IA == 1 , jugador == 1 ,
+	succCalc ( Ordi , Ordi , temperatura , jugador , IA ),
+DistribPlayer 	( Temp , Player , PosList ) . %, writeln (PosList).
+
+succ ([ Ordi , _ ], Jugador , PosList , IA ) : - 
+	IA == 1 , jugador == 2 ,
+	succCalc ( Ordi , Ordi , temperatura , jugador , IA ),
+	distribuirOrdi ( Temp , Ordi , PosList ) . %, writeln (PosList).
+
+succ ([ Ordi , Player ], Player , PosList , IA ) : - 
+	IA == 2 , Jugador == 1 ,
+	succCalc ( jugador , jugador , temperatura , jugador , IA ),
+	distribuirOrdi ( Temp , Ordi , PosList ) . %, writeln (PosList).
+
+succ ([ _ , Player ], Player , PosList , IA ) : - 
+	IA == 2 , jugador == 2 ,
+	succCalc ( jugador , jugador , temperatura , jugador , IA ),
+DistribPlayer 	( Temp , Player , PosList ) . %, writeln (PosList).
+
+
+% ---------------- Minimax Alpha Beta
+
+% MAX = 1, MIN = 2
+segundo jugador ( 1 , 2 ) .
+segundo jugador ( 2 , 1 ) .
+
+copia ( Posición , Valor , Posición , Valor ) .
+
+% Predica para recordar los valores de las hojas y mostrarlas
+recordMax ( X , X , E , _ , E , X ) .
+RecordMax ( X , Y , E , _ , E , X ) : -  X > = Y .
+recordMax ( X , Y , _ , MeilleurL , MeilleurL , Y ) : -  X = < Y .
+
+recordMin ( X , X , E , _ , E , X ) .
+recordMin ( X , Y , E , _ , E , X ) : -  X = < Y .
+recordMin ( X , Y , _ , MeilleurL , MeilleurL , Y ) : -  X > = Y .
+
+
+% Minimax alpha beta: llamada
+minimaxab ( Posición , Jugador , Profundidad , Mejor , Valor , IA ) : -
+	succ ( Posición , Jugador , X , AI ), % Simulación del movimiento, X = lista de posiciones después de jugar
+	secondPlayer ( Player , OtherPlayer ), % de cambio de jugador
+	decr ( Profundidad , P2 ), % Profundidad de disminución
+	alphabeta ( X , Otro jugador , P2 , - 999 , 999 , Mejor , Valor , IA ) .  % Alpha y Beta se inicializan a -999 y 999
+
+
+alphabeta ( [] , _ , _ , _ , _ , _ , _ , _ ) .
+
+alphabeta ([ E | L ], 1 , P , A , B , Best , V , IA ) : -
+        testDepth ( P , E , 1 ), % de hoja alcanzada o final del juego
+        heur ( E , 1 , ValE , IA ), % Evaluación de la posición en ValE
+        (( A = < ValE , % Mejor evaluación
+          alphabeta ( L , 1 , P , A , B , MeilleurL , ValL , IA ),
+          recordMin ( ValE , ValL , E , MeilleurL , Meilleur , V ))
+         ;
+         copia ( E , ValE , Best , V )) .  % Memorización de los mejores
+
+alphabeta ([ E | L ], 2 , P , A , B , Best , V , IA ) : -
+        testDepth ( P , E , 2 ),
+        heur ( E , 2 , ValE , IA ),
+        (( B > = ValE ,
+          alphabeta ( L , 2 , P , A , B , MeilleurL , ValL , IA ),
+          recordMax ( ValE , ValL , E , MeilleurL , Meilleur , V ))
+         ;
+         copia ( E , ValE , Best , V )) .
+
+alphabeta ([ E | L ], 1 , P , A , B , Best , V , IA ) : -
+        succ ( E , 1 , X , IA ),
+        no (vacío ( X )),
+        P \ = 0 ,
+        decr ( P , P2 ),
+        alphabeta ( X , 2 , P2 , A , B , MeilleurX , ValX , IA ),
+        (( ValX > = A ,
+          min ( ValX , B , Bbis ),
+          alphabeta ( L , 1 , P , A , Bbis , MeilleurL , ValL , IA ),
+          recordMin ( ValX , ValL , E , MeilleurL , Meilleur , V ))
+         ;
+         copia ( MeilleurX , ValX , Meilleur , V )) .
+    
+alphabeta ([ E | L ], 2 , P , A , B , Best , V , IA ) : -
+        succ ( E , 2 , X , IA ),
+        no (vacío ( X )),
+        P \ = 0 ,
+        decr ( P , P2 ),
+        alphabeta ( X , 1 , P2 , A , B , MeilleurX , ValX , IA ),
+        (( ValX = < B ,
+          max ( ValX , A , Abis ),
+          alphabeta ( L , 2 , P , Abis , B , MeilleurL , ValL , IA ),
+          recordMax ( ValX , ValL , E , MeilleurL , Meilleur , V ))
+         ;
+         copia ( MeilleurX , ValX , Meilleur , V )) .
+
+
+% Llamar para jugar la computadora
+
+jouerOrdi ( IA ) - ordiPlayer ( Pos ) minimaxab ( Pos , 1 , 3 , mejor , _ , IA ) ! , retractall (comp ( _ , _ )), nth1 ( 1 , Best , Best ),
+	para todos
+		miembro ( Elem , Best ),
+		((
+			nth1 ( 1 , Elem , X1 ), nth1 ( 2 , Elem , Y1 ), afirmar (computadora ( X1 , Y1 ))
+		)
+	),
+	drawplateau ( 1 ) ! .
+
+
+jouerPlayer ( IA ) - ordiPlayer ( Pos ) minimaxab ( Pos , 1 , 2 , mejor , _ , IA ) ! , retractall (player ( _ , _ )), nth1 ( 2 , Best , Best ),
+	para todos
+		miembro ( Elem , Best ),
+		((
+			nth1 ( 1 , Elem , X1 ), nth1 ( 2 , Elem , Y1 ), afirmar (jugador ( X1 , Y1 ))
+		)
+	),
+	drawplateau ( 1 ) ! .
+	
+
+% para ver un partido entre 2 IA
+ir  : -  repetir , playOrdi ( 1 ), playPlayer ( 2 ) .
