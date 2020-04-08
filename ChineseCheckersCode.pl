@@ -106,7 +106,6 @@ adjuntos( X1 , Y1 , X2 , Y2 ):-
     Z is X1 - X2 ,
     Z  ==  - 1 .
 
-
 %.................CONDICIONES DE LA CASILLA......................
 %
 % Una casilla puede estar libre u ocupada
@@ -301,3 +300,31 @@ moverComputadoraR( X1 , Y1 , X2 , Y2 ):-
     retract(computadoraR( X1 , Y1 )),
     assert(computadoraR( X2 , Y2 )),
     !.
+
+
+
+% .................FIN DEL JUEGO.............................
+%
+ganoJugadorV:-
+    jugadorV( 1 , 17 ),
+    jugadorV( 1 , 16 ),
+    jugadorV( 2 , 16 ),
+    jugadorV( 1 , 15 ),
+    jugadorV( 2 , 15 ),
+    jugadorV( 3 , 15 ),
+    jugadorV( 1 , 14 ),
+    jugadorV( 2 , 14 ),
+    jugadorV( 3 , 14 ),
+    jugadorV( 4 , 14 ).
+
+ganoComputadoraR:-
+    computadoraR( 1 , 1 ),
+    computadoraR( 1 , 2 ),
+    computadoraR( 2 , 2 ),
+    computadoraR( 1 , 3 ),
+    computadoraR( 2 , 3 ),
+    computadoraR( 3 , 3 ),
+    computadoraR( 1 , 4 ),
+    computadoraR( 2 , 4 ),
+    computadoraR( 3 , 4 ),
+    computadoraR( 4 , 4 ).
