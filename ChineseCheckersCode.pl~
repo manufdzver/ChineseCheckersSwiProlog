@@ -618,10 +618,8 @@ recordMin( X , Y , MejorMovX , _ , MejorMovX , X ):-
 recordMin( X , Y , _ , MejorMovY , MejorMovY , Y ):-
     X >= Y.
 
-% Incremento
-incr( P , P2 ):-
-    P2 is P + 1.
-% Decremento
+%Herramientas
+%Decremento
 decr( P , P2 ):-
     P2 is P - 1.
 % Lista vacía
@@ -647,8 +645,8 @@ min( A , B , B ):-
 
 
 % Minimax alpha beta: llamada
-minimaxab( Posición , Turno , Profundidad , MejorMov , Valor , IA ):-
-	succ( Posición , Turno , X , IA ),% Simulación del movimiento, X = lista de posiciones dispués de jugar
+minimaxab( Posicion , Turno , Profundidad , MejorMov , Valor , IA ):-
+	succ( Posicion , Turno , X , IA ),% Simulación del movimiento, X = lista de posiciones dispués de jugar
 	siguienteJugador( Turno , OtroJugador ), % Cambio de jugador
 	decr( Profundidad , P2 ), % Profundidad de disminución
 	alphabeta( X , OtroJugador , P2 , -999 , 999 , MejorMov , Valor , IA ).  % Alpha y Beta se inicializan a -999 y 999
@@ -664,6 +662,14 @@ alphabeta([ E | L ], 1 , P , A , B , MejorMov , Valor , IA ):-
            recordMin( ValE , ValL , E , MejorMovL , MejorMov , Valor ));
         copia( E , ValE , MejorMov , Valor )).  % Memorización de los mejores, o es el y anterior o copiamos lo que teniamos
 
+alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , IA ):-
+        testDepth( P , E , 2 ),
+        heur( E , 2 , ValE , IA ),
+        (( B >= ValE ,
+           alphabeta( L , 2 , P , A , B , MejorMovL , ValL , IA ),
+           recordMax( ValE , ValL , E , MejorMovL , MejorMov , V ));
+         copia( E , ValE , MejorMov , V )).
+
 alphabeta([ E | L ], 1 , P , A , B , MejorMov , V , IA ):-
         succ( E , 1 , X , IA ),
         not(vacio( X )),
@@ -678,14 +684,6 @@ alphabeta([ E | L ], 1 , P , A , B , MejorMov , V , IA ):-
 
 
 alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , IA ):-
-        testDepth( P , E , 2 ),
-        heur( E , 2 , ValE , IA ),
-        (( B >= ValE ,
-           alphabeta( L , 2 , P , A , B , MejorMovL , ValL , IA ),
-           recordMax( ValE , ValL , E , MejorMovL , MejorMov , V ));
-         copia( E , ValE , MejorMov , V )).
-
-alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , IA ):-
         succ( E , 2 , X , IA ),
         not(vacio( X )),
         P \= 0 ,
@@ -695,7 +693,7 @@ alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , IA ):-
            max( ValX , A , Abis ),
            alphabeta( L , 2 , P , Abis , B , MejorMovL , ValL , IA ),
            recordMax( ValX , ValL , E , MejorMovL , MejorMov , V ));
-         copia( MejorMovX , ValX , MejorMov , V )) .
+         copia( MejorMovX , ValX , MejorMov , V )).
 
 
 
@@ -762,7 +760,7 @@ jugarComputadoraR( IA ):-
     nth1( 1 , MejorMov , Mejor ),
     forall(
 
-        miembro( MejorMov , Mejor ),
+        miembro( Elem , Mejor ),
         (
             nth1( 1 , Elem , X1 ), nth1( 2 , Elem , Y1 ), assert(computadoraR( X1 , Y1 ))
          )
