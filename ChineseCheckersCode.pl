@@ -576,14 +576,8 @@ espaciosDisponibles(X , Y , M , Turno , IA):-
 
 % ------- Juega la ficha
 %
-% Tomamos la Pos con toda las posiciones y simula el tiro quitando la
-% lista de las posiciones y agregando la nueva posicion.
+
 %
-
-simularTiroComputadoraR( Pos , X1 , Y1 , X2 , Y2 , Out ):-
-    subtract( Pos , [[ X1 , Y1 ]], G ),
-    append([[ X2 , Y2 ]], G , Out ).
-
 % Combina elem con todos los elementos de la lista y lo guarda en Lista.
 % Jugador mete el elemento despues de cada nodo y computadora antes
 distribucionJugadorV( [] , _ , [] ).
@@ -890,7 +884,7 @@ jugarComputadoraR( IA ):-
          )
 
         ),
-	drawtablero( 1 ),
+	drawTablero,
         !.
 
 
@@ -906,7 +900,7 @@ jugarJugadorV( IA ):-
 			nth1( 1 , Elem , X1 ), nth1( 2 , Elem , Y1 ), assert(jugadorV( X1 , Y1 ))
             )
 	),
-	drawtablero( 1 ),
+	drawTablero,
         ! .
 
 % -- Mover JugadorVerde
@@ -920,13 +914,43 @@ moverJugadorV( X1 , Y1 , X2 , Y2 ):-
     !.
 
 % -- Mover Computadora Roja
-%
 moverComputadoraR( X1 , Y1 , X2 , Y2 ):-
     computadoraR( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
     retract(computadoraR( X1 , Y1 )),
     assert(computadoraR( X2 , Y2 )),
     !.
+
+moverJugadorA( X1 , Y1 , X2 , Y2 ):-
+    jugadorA( X1 , Y1 ),
+    movVal( X1 , Y1 , X2 , Y2 ),
+    retract(jugadorA( X1 , Y1 )),
+    assert(jugadorA( X2 , Y2 )),
+    !.
+
+moverJugadorB( X1 , Y1 , X2 , Y2 ):-
+    jugadorB( X1 , Y1 ),
+    movVal( X1 , Y1 , X2 , Y2 ),
+    retract(jugadorB( X1 , Y1 )),
+    assert(jugadorB( X2 , Y2 )),
+    !.
+
+moverJugadorA( X1 , Y1 , X2 , Y2 ):-
+    jugadorB( X1 , Y1 ),
+    movVal( X1 , Y1 , X2 , Y2 ),
+    retract(jugadorB( X1 , Y1 )),
+    assert(jugadorB( X2 , Y2 )),
+    !.
+
+moverJugadorN( X1 , Y1 , X2 , Y2 ):-
+    jugadorB( X1 , Y1 ),
+    movVal( X1 , Y1 , X2 , Y2 ),
+    retract(jugadorB( X1 , Y1 )),
+    assert(jugadorB( X2 , Y2 )),
+    !.
+
+
+
 
 
 
@@ -940,6 +964,10 @@ juegoIA:-
 newGame:-
     retractall(computadoraR( _ ,_ )),
     retractall(jugadorV( _ , _ )),
+    retractall(jugadorB( _ , _ )),
+    retractall(jugadorZ( _ , _ )),
+    retractall(jugadorN( _ , _ )),
+
     assert(computadoraR( 1 , 17 )),
     assert(computadoraR( 1 , 16 )),
     assert(computadoraR( 2 , 16 )),
@@ -950,6 +978,7 @@ newGame:-
     assert(computadoraR( 2 , 14 )),
     assert(computadoraR( 3 , 14 )),
     assert(computadoraR( 4 , 14 )),
+
     assert(jugadorV( 1 , 1 )),
     assert(jugadorV( 1 , 2 )),
     assert(jugadorV( 2 , 2 )),
@@ -960,7 +989,52 @@ newGame:-
     assert(jugadorV( 2 , 4 )),
     assert(jugadorV( 3 , 4 )),
     assert(jugadorV( 4 , 4 )),
-    drawtablero(1).
+
+    assert(jugadorA( -4 , 13 )),
+    assert(jugadorA( -3 , 13 )),
+    assert(jugadorA( -2 , 13 )),
+    assert(jugadorA( -1 , 13 )),
+    assert(jugadorA( -3 , 12 )),
+    assert(jugadorA( -2 , 12 )),
+    assert(jugadorA( -1 , 12 )),
+    assert(jugadorA( -2 , 11 )),
+    assert(jugadorA( -1 , 11 )),
+    assert(jugadorA( -1 , 10 )),
+
+    assert(jugadorB( -1 , 8 )),
+    assert(jugadorB( -2 , 7 )),
+    assert(jugadorB( -1 , 7 )),
+    assert(jugadorB( -1 , 6 )),
+    assert(jugadorB( -2 , 6 )),
+    assert(jugadorB( -3 , 6 )),
+    assert(jugadorB( -1 , 5 )),
+    assert(jugadorB( -2 , 5 )),
+    assert(jugadorB( -3 , 5 )),
+    assert(jugadorB( -4 , 5 )),
+
+    assert(jugadorZ( 6 , 5 )),
+    assert(jugadorZ( 7 , 5 )),
+    assert(jugadorZ( 8 , 5 )),
+    assert(jugadorZ( 9 , 5 )),
+    assert(jugadorZ( 7 , 6 )),
+    assert(jugadorZ( 8 , 6 )),
+    assert(jugadorZ( 9 , 6 )),
+    assert(jugadorZ( 8 , 7 )),
+    assert(jugadorZ( 9 , 7 )),
+    assert(jugadorZ( 9 , 8 )),
+
+    assert(jugadorN( 6 , 13 )),
+    assert(jugadorN( 7 , 13 )),
+    assert(jugadorN( 8 , 13 )),
+    assert(jugadorN( 9 , 13 )),
+    assert(jugadorN( 7 , 12 )),
+    assert(jugadorN( 8 , 12 )),
+    assert(jugadorN( 9 , 12 )),
+    assert(jugadorN( 8 , 11 )),
+    assert(jugadorN( 9 , 11 )),
+    assert(jugadorN( 9 , 10 )),
+
+    drawTablero.
 
 
 
