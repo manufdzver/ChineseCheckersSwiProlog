@@ -19,6 +19,30 @@ computadoraR( 2 , 14 ).
 computadoraR( 3 , 14 ).
 computadoraR( 4 , 14 ).
 
+:- dynamic jugadorA/ 2.
+jugadorA( -4 , 13 ).
+jugadorA( -3 , 13 ).
+jugadorA( -2 , 13 ).
+jugadorA( -1 , 13 ).
+jugadorA( -3 , 12 ).
+jugadorA( -2 , 12 ).
+jugadorA( -1 , 12 ).
+jugadorA( -2 , 11 ).
+jugadorA( -1 , 11 ).
+jugadorA( -1 , 10 ).
+
+:- dynamic jugadorB/ 2.
+jugadorB( -1 , 8).
+jugadorB( -2 , 7 ).
+jugadorB( -1 , 7 ).
+jugadorB( -1 , 6 ).
+jugadorB( -2 , 6 ).
+jugadorB( -3 , 6 ).
+jugadorB( -1 , 5 ).
+jugadorB( -2 , 5 ).
+jugadorB( -3 , 5 ).
+jugadorB( -4 , 5 ).
+
 :- dynamic jugadorV/ 2.
 jugadorV( 1 , 1 ).
 jugadorV( 1 , 2 ).
@@ -30,6 +54,31 @@ jugadorV( 1 , 4 ).
 jugadorV( 2 , 4 ).
 jugadorV( 3 , 4 ).
 jugadorV( 4 , 4 ).
+
+:- dynamic jugadorZ/ 2.
+jugadorZ( 6 , 5 ).
+jugadorZ( 7 , 5 ).
+jugadorZ( 8 , 5 ).
+jugadorZ( 9 , 5 ).
+jugadorZ( 7 , 6 ).
+jugadorZ( 8 , 6 ).
+jugadorZ( 9 , 6 ).
+jugadorZ( 8 , 7 ).
+jugadorZ( 9 , 7 ).
+jugadorZ( 9 , 8 ).
+
+:- dynamic jugadorN/ 2.
+jugadorN( 6 , 13 ).
+jugadorN( 7 , 13 ).
+jugadorN( 8 , 13 ).
+jugadorN( 9 , 13 ).
+jugadorN( 7 , 12 ).
+jugadorN( 8 , 12 ).
+jugadorN( 9 , 12 ).
+jugadorN( 8 , 11 ).
+jugadorN( 9 , 11 ).
+jugadorN( 9 , 10 ).
+
 
 
 
@@ -45,6 +94,14 @@ casilla(X , Y):-
     Y =< 17,
     X > 0,
     X =< ( 9 - G ).
+
+casilla2(X , Y):-
+    G is abs( Y - 9 ),
+    Y > 4,
+    Y =< 13,
+    (X < 0, X >= (0-G);
+    X >(9-G), X =< 9).
+
 
 % -- Checar si dos casillas son diferentes
 %
@@ -568,24 +625,27 @@ succCalc([ T | Q ], Pos , PosList , Turno , AI ):-
 % un movimineto, meterlo a una lista y meter como quedan todas las demas
 % posiciones
 
-succ([ Ordi , Player ], Turno , PosList , IA ):-
-	IA == 1 , Turno == 1 ,
-	succCalc( Ordi , Ordi , Temp , Turno , IA ),
+succ([ Compu , Player ], Turno , PosList , IA ):-
+	IA == 1 ,
+        Turno == 1 ,
+	succCalc( Compu , Compu , Temp , Turno , IA ),
         distribucionJugadorV(Temp , Player , PosList ). %, writeln (PosList).
 
-succ([ Ordi , _ ], Turno , PosList , IA ):-
+succ([ Compu , _ ], Turno , PosList , IA ):-
 	IA == 1 ,
-        jugador == 2 ,
-	succCalc( Ordi , Ordi , Temp , Turno , IA ),
-	distribucionComputadoraR( Temp , Ordi , PosList ). %, writeln (PosList).
+        Turno == 2 ,
+	succCalc( Compu , Compu , Temp , Turno , IA ),
+	distribucionComputadoraR( Temp , Compu , PosList ). %, writeln (PosList).
 
-succ([ Ordi , Player ], Turno , PosList , IA ):-
-	IA == 2 , Turno == 1 ,
+succ([ Compu , Player ], Turno , PosList , IA ):-
+	IA == 2 ,
+        Turno == 1 ,
 	succCalc( Player , Player , Temp , Turno , IA ),
-	distribucionComputadoraR( Temp , Ordi , PosList ). %, writeln (PosList).
+	distribucionComputadoraR( Temp , Compu , PosList ). %, writeln (PosList).
 
 succ([ _ , Player ], Turno , PosList , IA ):-
-	IA == 2 , Turno == 2 ,
+	IA == 2 ,
+        Turno == 2 ,
 	succCalc( Player , Player , Temp , Turno , IA ),
         distribucionJugadorV( Temp , Player , PosList ). %, writeln (PosList).
 
@@ -709,15 +769,33 @@ draw( A , B ):-
     write('R'),
     !.
 draw( A , B ):-
+    jugadorA( A , B ),
+    write('A'),
+    !.
+draw( A , B ):-
+    jugadorB( A , B ),
+    write('B'),
+    !.
+draw( A , B ):-
     jugadorV( A , B ),
     write('V'),
     !.
-
+draw( A , B ):-
+    jugadorZ( A , B ),
+    write('Z'),
+    !.
+draw( A , B ):-
+    jugadorN( A , B ),
+    write('N'),
+    !.
 draw( A , B ):-
     casilla( A , B ),
     write(.),
     !.
-
+draw( A , B ):-
+    casilla2( A , B ),
+    write(.),
+    !.
 draw( _ , _ ):-
     write(-).
 
@@ -745,8 +823,80 @@ drawtablero( Y ):-
     drawtablero( J ),
     !.
 
+dibujaTablero:-
+    drawLinea17,
+    drawLinea16,
+    drawLinea15,
+    drawLinea14,
+    drawLinea13,
+    drawLinea12,
+    drawLinea11,
+    drawLinea10,
+    drawLinea9,
+    drawLinea8,
+    drawLinea7,
+    drawLinea6,
+    drawLinea5,
+    drawLinea4,
+    drawLinea3,
+    drawLinea2,
+    drawLinea1.
 
 
+
+
+drawLinea17:-
+writeln(''),
+write('                '),draw(1,17),write('        ').
+drawLinea16:-
+writeln(''),
+write('               '),draw(1,16),write(' '),draw(2,16),write('       ').
+drawLinea15:-
+writeln(''),
+write('              '),draw(1,15),write(' '),draw(2,15),write(' '),draw(3,15),write('      ').
+drawLinea14:-
+writeln(''),
+write('             '),draw(1,14),write(' '),draw(2,14),write(' '),draw(3,14),write(' '),draw(4,14),write('     ').
+drawLinea13:-
+writeln(''),
+write('    '),draw(-4,13),write(' '), draw(-3,13),write(' '), draw(-2,13),write(' '), draw(-1,13),write(' '), draw(1,13),write(' '), draw(2,13),write(' '), draw(3,13),write(' '), draw(4,13),write(' '),draw(5,13), write(' '), draw(6,13), write(' '), draw(7,13), write(' '), draw(8,13), write(' '), draw(9,13),write('    ').
+drawLinea12:-
+writeln(''),
+write('     '), draw(-3,12), write( ' ' ), draw(-2,12), write( ' ' ), draw(-1,12), write( ' ' ), draw(1,12), write( ' ' ), draw(2,12), write( ' ' ), draw(3,12), write( ' ' ), draw(4,12), write( ' ' ), draw(5,12), write( ' ' ), draw(6,12), write(' '), draw(7,12), write(' '), draw(8,12), write(' '), draw(9,12),write( '   ' ).
+drawLinea11:-
+writeln(''),
+write('      '),draw(-2,11),write(' '),draw(-1,11),write(' '),draw(1,11),write(' '),draw(2,11),write(' '),draw(3,11),write(' '),draw(4,11),write(' '),draw(5,11),write(' '),draw(6,11),write(' '),draw(7,11), write(' '), draw(8,11), write(' '), draw(9,11),write('  ').
+drawLinea10:-
+writeln(''),
+write('       '),draw(-1,10),write(' '),draw(1,10),write(' '),draw(2,10),write(' '),draw(3,10),write(' '),draw(4,10),write(' '),draw(5,10),write(' '),draw(6,10),write(' '),draw(7,10),write(' '),draw(8,10), write(' '), draw(9,10),write('  ').
+drawLinea9:-
+writeln(''),
+write('        '),draw(1,9),write(' '),draw(2,9),write(' '),draw(3,9),write(' '),draw(4,9),write(' '),draw(5,9),write(' '),draw(6,9),write(' '),draw(7,9),write(' '),draw(8,9), write(' '), draw(9,9), write(' ').
+drawLinea8:-
+writeln(''),
+write('       '),draw(-1,8),write(' '),draw(1,8),write(' '),draw(2,8),write(' '),draw(3,8),write(' '),draw(4,8),write(' '),draw(5,8),write(' '),draw(6,8),write(' '),draw(7,8),write(' '),draw(8,8), write(' '), draw(9,8),write('  ').
+drawLinea7:-
+writeln(''),
+write('      '),draw(-2,7),write(' '),draw(-1,7),write(' '),draw(1,7),write(' '),draw(2,7),write(' '),draw(3,7),write(' '),draw(4,7),write(' '),draw(5,7),write(' '),draw(6,7),write(' '),draw(7,7), write(' '), draw(8,7), write(' '), draw(9,7),write('  ').
+drawLinea6:-
+writeln(''),
+write('     '), draw(-3,6), write( ' ' ), draw(-2,6), write( ' ' ), draw(-1,6), write( ' ' ), draw(1,6), write( ' ' ), draw(2,6), write( ' ' ), draw(3,6), write( ' ' ), draw(4,6), write( ' ' ), draw(5,6), write( ' ' ), draw(6,6), write(' '), draw(7,6), write(' '), draw(8,6), write(' '), draw(9,6),write( '   ' ).
+drawLinea5:-
+writeln(''),
+write('    '),draw(-4,5),write(' '), draw(-3,5),write(' '), draw(-2,5),write(' '), draw(-1,5),write(' '), draw(1,5),write(' '), draw(2,5),write(' '), draw(3,5),write(' '), draw(4,5),write(' '),draw(5,5), write(' '), draw(6,5), write(' '), draw(7,5), write(' '), draw(8,5), write(' '), draw(9,5),write('    ').
+
+drawLinea1:-
+writeln(''),
+write('                '),draw(1,1),write('        ').
+drawLinea2:-
+writeln(''),
+write('               '),draw(1,2),write(' '),draw(2,2),write('       ').
+drawLinea3:-
+writeln(''),
+write('              '),draw(1,3),write(' '),draw(2,3),write(' '),draw(3,3),write('      ').
+drawLinea4:-
+writeln(''),
+write('             '),draw(1,4),write(' '),draw(2,4),write(' '),draw(3,4),write(' '),draw(4,4),write('     ').
 
 
 
