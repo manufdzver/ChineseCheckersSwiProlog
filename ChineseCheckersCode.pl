@@ -124,6 +124,8 @@ adjuntos( X1 , Y1 , X2 , Y2 ):-
 
 % Adjuntos verticales
 %
+% Caso X1==X2
+%
 adjuntos( X1 , Y1 , X2 , Y2 ):-
     (   (casilla( X1 , Y1 ), casilla( X2 , Y2 ));
         (casilla2( X1 , Y1 ), casilla2( X2 , Y2 ))),
@@ -131,12 +133,44 @@ adjuntos( X1 , Y1 , X2 , Y2 ):-
     G is abs( Y1 - Y2 ),
     G  ==  1, !.
 
+%Casos X1 - X2 = 1
+
+%Subiendo
 adjuntos( X1 , Y1 , X2 , Y2 ):-
+    Y1 < 9,
     (   (casilla( X1 , Y1 ), casilla( X2 , Y2 ));
         (casilla2( X1 , Y1 ), casilla2( X2 , Y2 ))),
-    H is abs(X1-X2),
+    H is X1-X2,
+    H == -1,
+    G is Y1-Y2,
+    G  ==  -1, !.
+
+adjuntos( X1 , Y1 , X2 , Y2 ):-
+    Y1 >= 9,
+    (   (casilla( X1 , Y1 ), casilla( X2 , Y2 ));
+        (casilla2( X1 , Y1 ), casilla2( X2 , Y2 ))),
+    H is X1-X2,
     H == 1,
-    G is abs( Y1 - Y2 ),
+    G is Y1 - Y2,
+    G  ==  -1, !.
+
+%Bajando
+adjuntos( X1 , Y1 , X2 , Y2 ):-
+    Y1 =< 9,
+    (   (casilla( X1 , Y1 ), casilla( X2 , Y2 ));
+        (casilla2( X1 , Y1 ), casilla2( X2 , Y2 ))),
+    H is X1-X2,
+    H == 1,
+    G is Y1-Y2,
+    G  ==  1, !.
+
+adjuntos( X1 , Y1 , X2 , Y2 ):-
+    Y1 > 9,
+    (   (casilla( X1 , Y1 ), casilla( X2 , Y2 ));
+        (casilla2( X1 , Y1 ), casilla2( X2 , Y2 ))),
+    H is X1-X2,
+    H == -1,
+    G is Y1 - Y2,
     G  ==  1, !.
 
 % Salida/Entrada de X negativas y Salida/Entrada de excesos de X.
@@ -458,14 +492,15 @@ pasoFact( X1 , Y1 , X2 , Y2 ):-
 % a el.
 %
 movVal( X1 , Y1 , X2 , Y2 ):-
-    (pasoFact( X1 , Y1 , X2 , Y2 );
-    movVal2(X1 , Y1 , X2 , Y2 )),!.
+    (   movVal2(X1 , Y1 , X2 , Y2 );
+        pasoFact( X1 , Y1 , X2 , Y2 )
+    ),!.
 
 movVal2( X1 , Y1 , X2 , Y2 ):-
-    (saltoFact(X1 , Y1 , X2 , Y2);
-    salto2Fact( X1 , Y1 , X2 , Y2 );
-    salto3Fact(X1, Y1, X2, Y2)),
-    ! .
+    (   salto3Fact(X1 , Y1 , X2 , Y2);
+        salto2Fact( X1 , Y1 , X2 , Y2 );
+        saltoFact(X1, Y1, X2, Y2)
+    ),! .
 
 
 
@@ -535,7 +570,9 @@ movilidad( X , Y , Mov):-
     findall( X2 ,( Z is X - 1 , W is X + 1 , numlist(Z , W , DX), Z2 is Y - 1 , W2 is Y + 1 , numlist(Z2 , W2 , DY), miembro(X2 , DX), miembro( Y2 ,DY ), pasoFact( X , Y , X2 , Y2 )), M),
     tamañoLista( M , Mov).
 
-% Evaluamos la distancia al centro
+% -- Distancia al eje central
+%
+% Caso EJE VERTICAL (Rojo-Verde)
 %
 distCentro(X , Y , Dist):-
     Y > 9,
@@ -548,13 +585,68 @@ distCentro(X , Y , Dist):-
     Centro is Y / 2,
     Dist is abs(Centro - X).
 
-
-% -- Ponderamos el valor que tiene la posicion de una ficha
+% Caso EJE DIAGONAL (Amarillo-Azul), 2 sub-casos
 %
+% Caso Y>9 (Mitad superior del tablero)
+distCentroAZ(X, Y, Dist):-
+    Y>9,
+    Z is 5-((Y-9)*2),
+    Dist is abs(Z-X)/2.
+% Caso Y<9 (Mitad superior del tablero)
+distCentroAZ(X, Y, Dist):-
+    Y=<9,
+    Z is (9-Y)+5,
+    Dist is abs(Z-X)/2.
 
-% valorComputadoraR(X, Y, Val):- movilidad(X, Y, M), Dist is
-% 17-Y-1, Val is (Dist * 3) -M.
+% Caso EJE DIAGONAL (Blanco-Negro), 2 sub-casos
+%
+% Caso Y>9 (Mitad superior del tablero)
+distCentroBN(X, Y, Dist):-
+    Y>9,
+    Z is 5+(Y-9),
+    Dist is abs(Z-X)/2.
+% Caso Y<9 (Mitad superior del tablero)
+distCentroBN(X, Y, Dist):-
+    Y=<9,
+    Z is 5-((9-Y)*2),
+    Dist is abs(Z-X)/2.
 
+% -- Distancia a la meta
+%
+% Para caso vertical (Rojo-Verde), Rojo: Dist = 18-Y, Verde: Dist = Y.
+%
+% Caso EJE DIAGONAL (Amarillo-Azul) 3 sub-casos:
+%
+% Caso dentro de la zona azul
+distMetaAZ(X, Y, Dist):-
+    Y<9,
+    X>Y,
+    Dist is 4-X+Y.
+% Caso Y<=9 (Mitad inferior del tablero)
+distMetaAZ(X, Y, Dist):-
+    Y =< 9,
+    X =< Y,
+    Dist is Y-X+4.
+% Caso Y>9 (Mitad superior del tablero)
+distMetaAZ(X, Y, Dist):-
+    Y > 9,
+    X =< Y,
+    Dist is 13-X.
+
+% Caso EJE DIAGONAL 2 (Blanco-Negro) 2 sub-casos:
+%
+% Caso Y<= 9 (Mitad inferior del tablero)
+distMetaBN(X, Y, Dist):-
+    Y=<9,
+    Dist is 3+X.
+
+% Caso Y>9 (Mitad superior del tablero)
+distMetaBN(X, Y, Dist):-
+    Y > 9,
+    Dist is X+Y-6.
+
+% -- Cálculo del valor de cada ficha:
+% 
 valorComputadoraR(X , Y , Val):-
     distCentro(X , Y , Dist),
     Val is (( 18 - Y ) * 4 - Dist * 2).
@@ -597,8 +689,8 @@ valorFinalJugadorV(Val):-
 %.....................HEURISTICA.............................
 %
 
-% En pos le damos tablero pos que tiene todas las posiciones del
-% tablero, primero la de la computadora y luego la del jugadorV
+% En pos le damos tableroPos, que tiene todas las posiciones del
+% tablero en una lista de listas, primero la de la computadora y luego la del jugadorV...
 %
 
 heur(Pos, _ , Val, IA):-
@@ -608,39 +700,122 @@ heur(Pos, _ , Val, IA):-
 	heurJugadorVAvanza(PiezasjugadorV , ValjugadorV),
 	Val is Valcompu - ValjugadorV.
 
-heur(Pos, _ , Val, IA):-
-	IA == 2,
-	nth1( 1 , Pos , Piezascompu ), nth1( 2 , Pos , PiezasjugadorV ),
-	heurComputadoraRAvanza2( Piezascompu , Valcompu ),
-	heurJugadorVAvanza2( PiezasjugadorV , ValjugadorV ),
-	Val is Valcompu - ValjugadorV.
+%heur(Pos, _ , Val, IA):-
+%	IA == 2,
+%	nth1( 1 , Pos , Piezascompu ), nth1( 2 , Pos , PiezasjugadorV ),
+%	heurComputadoraRAvanza2( Piezascompu , Valcompu ),
+%	heurJugadorVAvanza2( PiezasjugadorV , ValjugadorV ),
+%	Val is Valcompu - ValjugadorV.
 
-% Es igual a valorComputadoraR
+% -- Aplicación de heurística a piezas de la COMPUTADORA (ROJO)
+%
+% Se aplica la heurística a la pieza en la posición X,Y
+% Es igual a valorComputadoraR (Podemos quitar valorComputadoraR)
 heurAPiezaComputadoraR( X , Y , Val ):-
     distCentro( X , Y , Dist ),
     Val is (( 18 - Y ) * 4 - Dist * 2 ).
 
-% Es igual a valorTableroComputadora
+% Suma el total de las evaluaciones de cada pieza para evaluar su situación
+% => Valor total jugador = Suma(Valor de cada pieza).
+% Es igual a valorTableroComputadora (Podemos quitar valorTableroComputadora)
 heurComputadoraRAvanza( [] , 0 ).
 heurComputadoraRAvanza([ T | Q ], Val ):-
 	nth1( 1 , T , X ),
-        nth1( 2 , T , Y ),
-        heurAPiezaComputadoraR( X , Y , Val2 ),
+    nth1( 2 , T , Y ),
+    heurAPiezaComputadoraR( X , Y , Val2 ),
 	heurComputadoraRAvanza( Q , Val1 ),
-        Val is Val1 + Val2.
+    Val is Val1 + Val2.
 
-% Es igual a valorJugadorV
-heurAPiezaJugadorV( _ , Y , Val ):-
-    Val is ( Y * 4 ).
+% -- Aplicación de heurística a piezas del JUGADOR VERDE
+%
+% Se aplica la heurística a la pieza en la posición X,Y
+% Es igual a valorJugadorV (podemos quitar valorJugadorV)
+heurAPiezaJugadorV( X , Y , Val ):-
+    distCentro( X , Y , Dist ),
+    Val is ((Y*4) - (Dist*2)).
 
-% Es igual a valorTableroJugador
+% Suma el total de las evaluaciones de cada pieza para evaluar su situación
+% => Valor total jugador = Suma(Valor de cada pieza).
+% Es igual a valorTableroJugador (podemos quitar valorTableroJugador)
 heurJugadorVAvanza( [] , 0 ).
 heurJugadorVAvanza([ T | Q ], Val ):-
 	nth1( 1 , T , X ),
-        nth1( 2 , T , Y ),
-        heurAPiezaJugadorV( X , Y , Val2 ),
+    nth1( 2 , T , Y ),
+    heurAPiezaJugadorV( X , Y , Val2 ),
 	heurJugadorVAvanza( Q , Val1 ),
-        Val is Val1 + Val2.
+    Val is Val1 + Val2.
+
+% -- Aplicación de heurística a piezas del JUGADOR AMARILLO
+%
+% Se aplica la heurística a la pieza en la posición X,Y
+heurAPiezaJugadorA(X, Y, Val):-
+    distCentroAA(X,Y,DistC),
+    distMetaAA(X,Y,DistM),
+    Val is ((16-DistM)*4)-(DistC*2).
+
+% Suma el total de las evaluaciones de cada pieza para evaluar su situación
+% => Valor total jugador = Suma(Valor de cada pieza).
+heurJugadorAAvanza([], 0).
+heurJugadorAAvanza([T | Q], Val):-
+    nth1( 1 , T , X ),
+    nth1( 2 , T , Y ),
+    heurAPiezaJugadorA(X, Y, Val2),
+    heurJugadorAAvanza(Q,Val1),
+    Val is Val1 + Val2.
+
+% -- Aplicación de heurística a piezas del JUGADOR AZUL
+%
+% Se aplica la heurística a la pieza en la posición X,Y
+heurAPiezaJugadorZ(X, Y, Val):-
+    distCentroAZ(X,Y,DistC),
+    distMetaAZ(X,Y,DistM),
+    Val is (DistM*4)-(DistC*2).
+
+% Suma el total de las evaluaciones de cada pieza para evaluar su situación
+% => Valor total jugador = Suma(Valor de cada pieza).
+heurJugadorZAvanza([], 0).
+heurJugadorZAvanza([T | Q], Val):-
+    nth1( 1 , T , X ),
+    nth1( 2 , T , Y ),
+    heurAPiezaJugadorZ(X, Y, Val2),
+    heurJugadorZAvanza(Q,Val1),
+    Val is Val1 + Val2.
+
+% -- Aplicación de heurística a piezas del JUGADOR BLANCO
+%
+% Se aplica la heurística a la pieza en la posición X,Y
+heurAPiezaJugadorB(X, Y, Val):-
+    distCentroBN(X,Y,DistC),
+    distMetaBN(X,Y,DistM),
+    Val is (DistM*4)-(DistC*2).
+
+% Suma el total de las evaluaciones de cada pieza para evaluar su situación
+% => Valor total jugador = Suma(Valor de cada pieza).
+heurJugadorBAvanza([], 0).
+heurJugadorBAvanza([T | Q], Val):-
+    nth1( 1 , T , X ),
+    nth1( 2 , T , Y ),
+    heurAPiezaJugadorB(X, Y, Val2),
+    heurJugadorBAvanza(Q,Val1),
+    Val is Val1 + Val2.
+
+% -- Aplicación de heurística a piezas del JUGADOR NEGRO
+%
+% Se aplica la heurística a la pieza en la posición X,Y
+heurAPiezaJugadorN(X, Y, Val):-
+    distCentroBN(X,Y,DistC),
+    distMetaBN(X,Y,DistM),
+    Val is ((16-DistM)*4)-(DistC*2).
+
+% Suma el total de las evaluaciones de cada pieza para evaluar su situación
+% => Valor total jugador = Suma(Valor de cada pieza).
+heurJugadorNAvanza([], 0).
+heurJugadorNAvanza([T | Q], Val):-
+    nth1( 1 , T , X ),
+    nth1( 2 , T , Y ),
+    heurAPiezaJugadorN(X, Y, Val2),
+    heurJugadorNAvanza(Q,Val1),
+    Val is Val1 + Val2.
 
 
 % Para enfrentar 2 AI
@@ -819,8 +994,6 @@ min( A , B , A ):-
     A < B.
 min( A , B , B ):-
     A > B.
-
-
 
 % Minimax alpha beta: llamada
 minimaxab( Posicion , Turno , Profundidad , MejorMov , Valor , IA ):-
@@ -1008,6 +1181,7 @@ jugarComputadoraR( IA ):-
          )
 
         ),
+    tty_clear,
 	drawTablero,
         !.
 
