@@ -749,8 +749,8 @@ heurJugadorVAvanza([ T | Q ], Val ):-
 %
 % Se aplica la heurística a la pieza en la posición X,Y
 heurAPiezaJugadorA(X, Y, Val):-
-    distCentroAA(X,Y,DistC),
-    distMetaAA(X,Y,DistM),
+    distCentroAZ(X,Y,DistC),
+    distMetaAZ(X,Y,DistM),
     Val is ((16-DistM)*4)-(DistC*2).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
