@@ -8,6 +8,9 @@
 % juego.
 %
 
+:- dynamic modoJuego/1.
+modoJuego(1).
+
 :- dynamic computadoraR/ 2.
 computadoraR( 1 , 17 ).
 computadoraR( 1 , 16 ).
@@ -19,6 +22,7 @@ computadoraR( 1 , 14 ).
 computadoraR( 2 , 14 ).
 computadoraR( 3 , 14 ).
 computadoraR( 4 , 14 ).
+
 
 :- dynamic jugadorA/ 2.
 jugadorA( -3 , 13 ).
@@ -69,7 +73,7 @@ jugadorZ( 9 , 7 ).
 jugadorZ( 9 , 8 ).
 
 :- dynamic jugadorN/ 2.
-%jugadorN( 6 , 13 ).
+jugadorN( 6 , 13 ).
 jugadorN( 7 , 13 ).
 jugadorN( 8 , 13 ).
 jugadorN( 9 , 13 ).
@@ -101,7 +105,7 @@ casilla2(X , Y):-
     Y > 4,
     Y =< 13,
     (   (X =< 0, X >= (0-G),!);
-        (X >(9-G), X =< 9)).
+        (X >=(9-G), X =< 9)).
 
 
 % -- Checar si dos casillas son diferentes
@@ -231,7 +235,7 @@ ocupada( X , Y ):-
 saltoFact( X1 , Y1 , X2 , Y2 ):-
     diferentes( X1 , Y1 , X2 , Y2 ),
     libre( X2 , Y2 ),
-    Diff is abs(X1 - X2),
+    Diff is (X1 - X2),
     Diff == 2,
     Xi is X1 - 1,
     Y1 == Y2,
@@ -243,7 +247,7 @@ saltoFact( X1 , Y1 , X2 , Y2 ):-
 saltoFact( X1 , Y1 , X2 , Y2 ):-
     diferentes( X1 , Y1 , X2 , Y2 ),
     libre( X2 , Y2 ),
-    Diff is abs(X2 - X1) ,
+    Diff is (X2 - X1) ,
     Diff == 2,
     Xi is X1 + 1,
     Y1 == Y2,
@@ -372,14 +376,11 @@ saltoFact( X1 , Y1 , X2 , Y2 ):-
 % Primer salto horizontal.
 salto2Fact(X1,Y1,X2,Y2):- 
     %saltoFact(X1,Y1,X2,Y2);
-    (
-        (
-            (X4 is X1 + 2, saltoFact(X1,Y1,X4,Y1),saltoFact(X4,Y1,X2,Y2));
-            (X3 is X1 - 2, saltoFact(X1,Y1,X3,Y1),saltoFact(X3,Y1,X2,Y2))
-        )
+    (   (X4 is X1 + 2, saltoFact(X1,Y1,X4,Y1),saltoFact(X4,Y1,X2,Y2));
+        (X3 is X1 - 2, saltoFact(X1,Y1,X3,Y1),saltoFact(X3,Y1,X2,Y2))
     ),!.
 
-%- BAJANDO (Rojo)
+%- BAJANDO
 
 % Primer salto vertical.
 salto2Fact(X1,Y1,X2,Y2):-
@@ -416,10 +417,7 @@ salto2Fact(X1,Y1,X2,Y2):-
     ), !.
 
 
-%------ Saltos de n espacios.
-%Solo se tiene que cambiar saltoFact por salto2Fact en el metodo de arriba.
-
-%- SUBIENDO (Verde)
+%- SUBIENDO
 % Primer salto vertical.
 salto2Fact(X1,Y1,X2,Y2):-
     %saltoFact(X1,Y1,X2,Y2);
@@ -454,30 +452,116 @@ salto2Fact(X1,Y1,X2,Y2):-
         )
     ), !.
 
-% Subiendo (Verde)
+%------ Saltos Triples.
+
+% Último salto Horizontal
 salto3Fact(X1,Y1,X2,Y2):-
-    jugadorV(X1,Y1),
-    findall([ Xx , Yx ],
-            (numlist( 1 , 9 , DX ),numlist(Y1,17 , DY ), miembro( Yx , DY ), miembro( Xx , DX ),libre(Xx,Yx), salto2Fact( X1 , Y1 , Xx , Yx )),
-            M),
-    salto3FactPrueba(M,X2,Y2),!.
+    (   (X3 is X2-2, salto2Fact(X1,Y1,X3,Y2), saltoFact(X3,Y2,X2,Y2));
+        (X3 is X2+2, salto2Fact(X1,Y1,X3,Y2), saltoFact(X3,Y2,X2,Y2))
+    ),!.
 
-% Bajando (Rojo)
+% Bajando -- 2 Casos
+% Caso Y1!=14
 salto3Fact(X1,Y1,X2,Y2):-
-    computadoraR(X1,Y1),
-    findall([ Xx , Yx ],
-            (numlist( 1 , 9 , DX ),numlist( 1 , Y1 , DY ), miembro( Yx , DY ), miembro( Xx , DX ),libre(Xx,Yx), salto2Fact( X1 , Y1 , Xx , Yx )),
-            M),
-    salto3FactPrueba(M,X2,Y2),!.
+    not(Y1=:=14),
+    Y3 is Y2+2, 
+    (   (salto2Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2)); 
+        (X3 is X2-2, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+2, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
+    ),!.
 
-salto3FactPrueba([L|_],X2,Y2):-
-    nth1(1,L,X1),
-    nth1(2,L,Y1),
-    saltoFact(X1,Y1,X2,Y2),
-    !.
-salto3FactPrueba([_|Q],X2,Y2):-
-    salto3FactPrueba(Q,X2,Y2),!.
+% Caso Y1=14 (Se salta el eje Y=9 en último salto)
+salto3Fact(X1,Y1,X2,Y2):-
+    Y1=:=14,
+    Y3 is Y2+2, 
+    (   (X3 is X2+1, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))     
+    ),!.
 
+% Subiendo -- 2 Casos
+% Caso Y1!=4
+salto3Fact(X1,Y1,X2,Y2):-
+    not(Y1=:=4),
+    Y3 is Y2-2, 
+    (   (salto2Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2)); 
+        (X3 is X2-2, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+2, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
+    ),!.
+
+% Caso Y1=4 (Se salta el eje Y=9 en último salto)
+salto3Fact(X1,Y1,X2,Y2):-
+    Y1=:=4,
+    Y3 is Y2-2, 
+    (   (X3 is X2+1, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2)) 
+    ),!.
+
+%------ Saltos Cuádruples.
+
+% Último salto Horizontal
+salto4Fact(X1,Y1,X2,Y2):-
+    (   (X3 is X2-2, salto3Fact(X1,Y1,X3,Y2), saltoFact(X3,Y2,X2,Y2));
+        (X3 is X2+2, salto3Fact(X1,Y1,X3,Y2), saltoFact(X3,Y2,X2,Y2))
+    ),!.
+
+% Último salto vertical
+%
+% Bajando -- 2 casos 
+salto4Fact(X1,Y1,X2,Y2):-
+    not(Y1=:=16),
+    Y3 is Y2+2,
+    (   (salto3Fact(X1,Y1,X2,Y3),saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2-2, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+2, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
+    ),!.
+
+salto4Fact(X1,Y1,X2,Y2):-
+    Y1=:=16,
+    Y3 is Y2+2,
+    (   (X3 is X2+1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2)) 
+    ),!.
+
+
+% Subiendo
+salto4Fact(X1,Y1,X2,Y2):-
+    not(Y1=:=2),
+    Y3 is Y2-2,
+    (   (salto3Fact(X1,Y1,X2,Y3),saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2-2, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+2, salto3Fact(X1,Y1,X3,Y3),saltoFact(X3,Y3,X2,Y2))
+    ),!.
+
+salto4Fact(X1,Y1,X2,Y2):-
+    Y1=:=2,
+    Y3 is Y2+2,
+    (   (X3 is X2+1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2)) 
+    ),!.
+
+%------ Saltos Quíntuples
+
+% Último salto Horizontal:
+salto5Fact(X1,Y1,X2,Y2):-
+    (   (X3 is X2-2, salto4Fact(X1,Y1,X3,Y2), saltoFact(X3,Y2,X2,Y2));
+        (X3 is X2+2, salto4Fact(X1,Y1,X3,Y2), saltoFact(X3,Y2,X2,Y2))
+    ),!.
+
+% Último salto Vertical:
+%
+% Bajando.
+salto5Fact(X1,Y1,X2,Y2):-
+    Y3 is Y2+2,
+    (   (salto4Fact(X1,Y1,X2,Y3), saltoFact(X1,Y3,X2,Y2));
+        (X3 is X2+2, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
+    ),!.
+
+% Subiendo.
+salto5Fact(X1,Y1,X2,Y2):-
+    Y3 is Y2-2,
+    (   (salto4Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2+2, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
+    ),!.
 
 %.................PASOS A CASILLAS..............................
 %
@@ -497,8 +581,10 @@ movVal( X1 , Y1 , X2 , Y2 ):-
     ),!.
 
 movVal2( X1 , Y1 , X2 , Y2 ):-
-    (   salto3Fact(X1 , Y1 , X2 , Y2);
-        salto2Fact( X1 , Y1 , X2 , Y2 );
+    (   salto5Fact(X1, Y1, X2, Y2);
+        salto4Fact(X1, Y1, X2, Y2);
+        salto3Fact(X1, Y1, X2, Y2);
+        salto2Fact(X1, Y1, X2, Y2);
         saltoFact(X1, Y1, X2, Y2)
     ),! .
 
@@ -542,8 +628,7 @@ tamañoLista([ _ | R ], T ):-
     tamañoLista( R , T2 ),
     T is T2 + 1.
 
-% -- Encontrar las posiciones de la computadoraR y jugadorV y guardarlas
-% en una lista.
+% -- Encontrar las posiciones de la computadoraR y jugadores, y guardarlas en una lista.
 %
 computadoraRPos(Pos):-
     findall( [ X , Y ], computadoraR(X , Y), Pos ).
@@ -551,9 +636,41 @@ computadoraRPos(Pos):-
 jugadorVPos(Pos):-
     findall( [ X , Y ], jugadorV(X , Y), Pos ).
 
-tableroPos(Pos):-
+jugadorAPos(Pos):-
+    findall( [ X , Y ], jugadorA(X , Y), Pos ).
+
+jugadorBPos(Pos):-
+    findall( [ X , Y ], jugadorB(X , Y), Pos ).
+
+jugadorZPos(Pos):-
+    findall( [ X , Y ], jugadorZ(X , Y), Pos ).
+
+jugadorNPos(Pos):-
+    findall( [ X , Y ], jugadorN(X , Y), Pos ).
+
+% Obtiene lista de todos las fichas del tablero (cada una en una lista de [X,Y])
+% Modo 2 jugadores
+tableroPos(Pos, 1):-
     computadoraRPos(P1),
     jugadorVPos(P2),
+    append([P1], [P2], Pos ).
+
+% Modo 3 jugadores
+tableroPos(Pos, 2):-
+    computadoraRPos(P1),
+    jugadorBPos(P2),
+    append([P1], [P2], Pos ).
+
+% Modo 4 jugadores
+tableroPos(Pos, 3):-
+    computadoraRPos(P1),
+    jugadorAPos(P2),
+    append([P1], [P2], Pos).
+
+% Modo 6 jugadores
+tableroPos(Pos, 4):-
+    computadoraRPos(P1),
+    jugadorAPos(P2), 
     append([P1], [P2], Pos ).
 
 
@@ -566,9 +683,9 @@ miembro( X , [ X | _ ]).
 miembro( X , [ _ | L ]):-
     miembro(X , L).
 
-movilidad( X , Y , Mov):-
-    findall( X2 ,( Z is X - 1 , W is X + 1 , numlist(Z , W , DX), Z2 is Y - 1 , W2 is Y + 1 , numlist(Z2 , W2 , DY), miembro(X2 , DX), miembro( Y2 ,DY ), pasoFact( X , Y , X2 , Y2 )), M),
-    tamañoLista( M , Mov).
+%movilidad( X , Y , Mov):-
+ %   findall( X2 ,( Z is X - 1 , W is X + 1 , numlist(Z , W , DX), Z2 is Y - 1 , W2 is Y + 1 , numlist(Z2 , W2 , DY), miembro(X2 , DX), miembro( Y2 ,DY ), pasoFact( X , Y , X2 , Y2 )), M),
+  %  tamañoLista( M , Mov).
 
 % -- Distancia al eje central
 %
@@ -578,12 +695,12 @@ distCentro(X , Y , Dist):-
     Y > 9,
     Aux is 18 - Y,
     Centro is Aux / 2,
-    Dist is abs(Centro - X).
+    Dist is abs(Centro - X),!.
 
 distCentro(X , Y , Dist):-
     Y =< 9 ,
     Centro is Y / 2,
-    Dist is abs(Centro - X).
+    Dist is abs(Centro - X),!.
 
 % Caso EJE DIAGONAL (Amarillo-Azul), 2 sub-casos
 %
@@ -645,46 +762,6 @@ distMetaBN(X, Y, Dist):-
     Y > 9,
     Dist is X+Y-6.
 
-% -- Cálculo del valor de cada ficha:
-% 
-valorComputadoraR(X , Y , Val):-
-    distCentro(X , Y , Dist),
-    Val is (( 18 - Y ) * 4 - Dist * 2).
-
-% Recibe lista con todas las posiciones de sus piezas en formato de
-% lista cada una (cada elemento tiene "x" y "y")
-valorTableroComputadoraR( [] , 0 ).
-valorTableroComputadoraR([ T | Q ], Val):-
-    nth1( 1 , T , X ),
-    nth1( 2 , T , Y ),
-    valorComputadoraR( X , Y , Val2 ),
-    valorTableroComputadoraR( Q , Val1 ),
-    Val is Val1 + Val2.
-
-valorFinalComputadoraR(Val):-
-    computadoraRPos(Pos),
-    valorTableroComputadoraR(Pos , Val).
-
-% valorJuagadorV(X, Y, Val):- movilidad(X, Y, M), Dist is Y + 1,
-% Val is (Dist * 3) -M.
-%
-
-valorJugadorV(X , Y , Val):-
-    distCentro(X , Y , Dist),
-    Val is (( Y ) * 4 - Dist * 2 ).
-
-valorTableroJugadorV([] , 0).
-valorTableroJugadorV([ T | Q ], Val ):-
-    nth1( 1 , T , X ),
-    nth1( 2 , T , Y ),
-    valorJugadorV( X , Y , Val2 ),
-    valorTableroJugadorV( Q , Val1 ),
-    Val is Val1 + Val2.
-
-valorFinalJugadorV(Val):-
-    jugadorVPos(Pos),
-    valorTableroJugadorV( Pos , Val ).
-
 
 %.....................HEURISTICA.............................
 %
@@ -693,19 +770,48 @@ valorFinalJugadorV(Val):-
 % tablero en una lista de listas, primero la de la computadora y luego la del jugadorV...
 %
 
-heur(Pos, _ , Val, IA):-
-	IA == 1 ,
+% --Modo 2 jugadores
+heur(Pos, _ , Val, Modo):-
+	Modo == 1 ,
 	nth1(1 , Pos , Piezascompu), nth1(2 , Pos , PiezasjugadorV),
 	heurComputadoraRAvanza(Piezascompu , Valcompu),
 	heurJugadorVAvanza(PiezasjugadorV , ValjugadorV),
 	Val is Valcompu - ValjugadorV.
 
-%heur(Pos, _ , Val, IA):-
-%	IA == 2,
-%	nth1( 1 , Pos , Piezascompu ), nth1( 2 , Pos , PiezasjugadorV ),
-%	heurComputadoraRAvanza2( Piezascompu , Valcompu ),
-%	heurJugadorVAvanza2( PiezasjugadorV , ValjugadorV ),
-%	Val is Valcompu - ValjugadorV.
+% --Modo 3 jugadores
+heur(Pos, _ , Val, Modo):-
+    Modo == 2 ,
+    nth1(1 , Pos , Piezascompu), nth1(2 , Pos , PiezasjugadorB),nth1(3 , Pos , PiezasjugadorZ),
+    heurComputadoraRAvanza(Piezascompu , Valcompu),
+    heurJugadorBAvanza(PiezasjugadorB , ValjugadorB),
+    heurJugadorZAvanza(PiezasjugadorZ , ValjugadorZ),
+    Val is Valcompu - (ValjugadorB + ValjugadorZ).
+
+% --Modo 4 jugadores
+heur(Pos, _ , Val, Modo):-
+    Modo == 3 ,
+    nth1(1 , Pos , Piezascompu), 
+    nth1(2 , Pos , PiezasjugadorA),nth1(3 , Pos , PiezasjugadorV),nth1(4 , Pos , PiezasjugadorZ),
+    heurComputadoraRAvanza(Piezascompu , Valcompu),
+    heurJugadorAAvanza(PiezasjugadorA , ValjugadorA),
+    heurJugadorZAvanza(PiezasjugadorZ , ValjugadorZ),
+    heurJugadorVAvanza(PiezasjugadorV , ValjugadorV),
+    Val is Valcompu - (ValjugadorA + ValjugadorZ + ValjugadorV).
+
+% --Modo 6 jugadores
+heur(Pos, _ , Val, Modo):-
+    Modo == 4 ,
+    nth1(1 , Pos , Piezascompu), 
+    nth1(2 , Pos , PiezasjugadorA),nth1(3 , Pos , PiezasjugadorB),
+    nth1(4 , Pos , PiezasjugadorV),nth1(5 , Pos , PiezasjugadorZ),nth1(6 , Pos , PiezasjugadorN),
+    heurComputadoraRAvanza(Piezascompu , Valcompu),
+    heurJugadorAAvanza(PiezasjugadorA , ValjugadorA),
+    heurJugadorZAvanza(PiezasjugadorZ , ValjugadorZ),
+    heurJugadorVAvanza(PiezasjugadorV , ValjugadorV),
+    heurJugadorBAvanza(PiezasjugadorB , ValjugadorB),
+    heurJugadorNAvanza(PiezasjugadorN , ValjugadorN),
+    Val is Valcompu - (ValjugadorA + ValjugadorZ + ValjugadorV+ValjugadorB+ValjugadorN).
+
 
 % -- Aplicación de heurística a piezas de la COMPUTADORA (ROJO)
 %
@@ -713,7 +819,7 @@ heur(Pos, _ , Val, IA):-
 % Es igual a valorComputadoraR (Podemos quitar valorComputadoraR)
 heurAPiezaComputadoraR( X , Y , Val ):-
     distCentro( X , Y , Dist ),
-    Val is (( 18 - Y ) * 4 - Dist * 2 ).
+    Val is (( 18 - Y ) * 4 - Dist * 3 ).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -732,7 +838,7 @@ heurComputadoraRAvanza([ T | Q ], Val ):-
 % Es igual a valorJugadorV (podemos quitar valorJugadorV)
 heurAPiezaJugadorV( X , Y , Val ):-
     distCentro( X , Y , Dist ),
-    Val is ((Y*4) - (Dist*2)).
+    Val is ((Y*4) - (Dist*3)).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -751,7 +857,7 @@ heurJugadorVAvanza([ T | Q ], Val ):-
 heurAPiezaJugadorA(X, Y, Val):-
     distCentroAZ(X,Y,DistC),
     distMetaAZ(X,Y,DistM),
-    Val is ((16-DistM)*4)-(DistC*2).
+    Val is ((16-DistM)*4)-(DistC*3).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -769,7 +875,7 @@ heurJugadorAAvanza([T | Q], Val):-
 heurAPiezaJugadorZ(X, Y, Val):-
     distCentroAZ(X,Y,DistC),
     distMetaAZ(X,Y,DistM),
-    Val is (DistM*4)-(DistC*2).
+    Val is (DistM*4)-(DistC*3).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -787,7 +893,7 @@ heurJugadorZAvanza([T | Q], Val):-
 heurAPiezaJugadorB(X, Y, Val):-
     distCentroBN(X,Y,DistC),
     distMetaBN(X,Y,DistM),
-    Val is (DistM*4)-(DistC*2).
+    Val is (DistM*4)-(DistC*3).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -805,7 +911,7 @@ heurJugadorBAvanza([T | Q], Val):-
 heurAPiezaJugadorN(X, Y, Val):-
     distCentroBN(X,Y,DistC),
     distMetaBN(X,Y,DistM),
-    Val is ((16-DistM)*4)-(DistC*2).
+    Val is ((16-DistM)*4)-(DistC*3).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -818,51 +924,67 @@ heurJugadorNAvanza([T | Q], Val):-
     Val is Val1 + Val2.
 
 
-% Para enfrentar 2 AI
-%
-
-heurAPiezaComputadoraR2( X , Y , Val ):-
-    distCentro( X , Y , _ ),
-    Val is (( 18 - Y ) * 4 ).
-
-heurComputadoraRAvanza2( [] , 0 ).
-heurComputadoraRAvanza2([ T | Q ], Val ):-
-    nth1( 1 , T , X ),
-    nth1( 2 , T , Y ),
-    heurAPiezaComputadoraR2( X , Y , Val2 ),
-    heurComputadoraRAvanza2( Q , Val1 ),
-    Val is Val1 + Val2.
-
-heurAPiezaJugadorV2( X , Y , Val ):-
-    distCentro( X , Y , Dist ), Val is ( Y * 4 ) - Dist * 2.
-heurJugadorVAvanza2( [] , 0 ).
-heurJugadorVAvanza2([ T | Q ], Val ):-
-    nth1( 1 , T , X ),
-    nth1( 2 , T , Y ),
-    heurAPiezaJugadorV2( X , Y , Val2 ),
-    heurJugadorVAvanza2( Q , Val1 ),
-    Val is Val1 + Val2.
-
 
 
 %...................POS. ACCESIBLES............................
 %
 
-% Devuelve la lista de espacios disponibles
+% Revisa si es posible seguir saltando desde una posicion X,Y dada
+% Entonces sirve para ver si puede realizar cadenas de saltos.
+saltosExtra([],[]).
+saltosExtra([L|Q], Res):-
+    saltosExtra(Q, Res1),
+    nth1(1,L,X), nth1(2,L,Y),
+    Lowx is X-2, Highx is X+2,
+    Lowy is Y-2, Highy is Y+2,
+    numlist(Lowx,Highx,DX),
+    findall([X2, Y2],
+            (miembro( Y2 , [Lowy,Y,Highy] ), miembro( X2 , DX ),libre(X2,Y2), saltoFact( X , Y , X2 , Y2 )),
+            M),
+    union(M,Res1,Res).
 
-espaciosDisponiblesComputadoraR( X , Y , M ):-
-    findall([ X2 , Y2 ],
-            (numlist( 1 , 9 , DX ),numlist( 1 , Y , DY ), miembro( Y2 , DY ), miembro( X2 , DX ),libre(X2,Y2), movVal( X , Y , X2 , Y2 )),
-            M) .
+    
+% Devuelve la lista de movimientos posibles desde la posicion X, Y
+espaciosDisponiblesComputadoraR( X , Y , M):-
+    numlist( 1 , 9 , DX ),numlist( 1 , Y , DY ), 
+    findall([X2, Y2],
+            (miembro( Y2 , DY ), miembro( X2 , DX ),libre(X2,Y2), saltoFact( X , Y , X2 , Y2 )),
+            M1),
+    findall([Xp, Yp],
+            (miembro( Yp , DY ), miembro( Xp , DX ),libre(Xp,Yp), pasoFact( X , Y , Xp , Yp )),
+            Mp),
+    saltosExtra(M1,M2),
+    saltosExtra(M2,M3),
+    saltosExtra(M3,M4),
+    saltosExtra(M4,M5),
+    union(M1,M2,R12),
+    union(R12,M3,R123),
+    union(R123,M4,R1234),
+    union(R1234,M5,Maux),
+    union(Maux,Mp,Mres),
+    subtract(Mres,[[X,Y]],M).
 
 espaciosDisponiblesJugadorV( X , Y , M ):-
+    numlist( 1 , 9 , DX ),numlist( 1, 17 , DY ), 
     findall([ X2 , Y2 ],
-            (numlist( 1 , 9 , DX ), numlist( Y , 17 , DY ), miembro( X2 , DX ), miembro( Y2 , DY ) , libre(X2,Y2), movVal( X , Y , X2 , Y2 )),
-            M) .
+            (miembro( Y2 , DY ), miembro( X2 , DX ),libre(X2,Y2), saltoFact( X , Y , X2 , Y2 )),
+            M1),
+    findall([Xp, Yp],
+            (miembro( Yp , DY ), miembro( Xp , DX ),libre(Xp,Yp), pasoFact( X , Y , Xp , Yp )),
+            Mp),
+    saltosExtra(M1,M2),
+    saltosExtra(M2,M3),
+    saltosExtra(M3,M4),
+    saltosExtra(M4,M5),
+    union(M1,M2,R12),
+    union(R12,M3,R123),
+    union(R123,M4,R1234),
+    union(R1234,M5,Maux),
+    union(Maux,Mp,Mres),
+    subtract(Mres,[[X,Y]],M).
 
 % Turno 1 juega la compu, turno 2 juega el jugadorV
 %
-
 espaciosDisponibles(X , Y , M , Turno , IA):-
     IA == 1 ,
     ((Turno == 1, espaciosDisponiblesComputadoraR( X , Y , M ),! ); (Turno == 2, espaciosDisponiblesJugadorV( X , Y , M ) ,! )).
@@ -878,12 +1000,14 @@ espaciosDisponibles(X , Y , M , Turno , IA):-
 
 %
 % Combina elem con todos los elementos de la lista y lo guarda en Lista.
-% Jugador mete el elemento despues de cada nodo y computadora antes
-distribucionJugadorV( [] , _ , [] ).
-distribucionJugadorV([ T | Q ], Elem , Lista ):-
-    distribucionJugadorV( Q , Elem , L2 ),
+
+% Junta todas las opciones posibles del jugador en turno con las del otro jugador
+% Entonces quedan todas las configuraciones posibles del tablero completo.
+distribucionJugador( [] , _ , [] ).
+distribucionJugador([ T | Q ], Elem , Lista ):-
+    distribucionJugador( Q , Elem , L2 ),
     append([ T ], [ Elem ], L1 ),
-    append([ L1 ], L2 , Lista ).
+    append([ L1 ], L2 , Lista ). 
 
 distribucionComputadoraR( [] , _ , [] ) .
 distribucionComputadoraR([ T | Q ], Elem , Lista ):-
@@ -906,44 +1030,87 @@ succL([ Elem | QL ], G , Res):-
 succCalc([] , _ , [] , _ , _ ).
 succCalc([ T | Q ], Pos , PosList , Turno , AI ):-
 	nth1( 1 , T , Xi ),
-        nth1( 2 , T , Yi ),
-	espaciosDisponibles( Xi , Yi , L , Turno , AI ),
-	subtract( Pos , [[ Xi , Yi ]], G ),
-	succL( L , G , PosList1 ),
+    nth1( 2 , T , Yi ),
+	espaciosDisponibles( Xi , Yi , L , Turno , AI ), %Obtiene posibles movimientos desde Xi, Yi en L
+	subtract( Pos , [[ Xi , Yi ]], G ), %Quita de la lista de fichas la ficha Xi,Yi, pues es la que se movió
+	succL( L , G , PosList1 ), %Regresa una lista de listas, donde cada elemento contiene las posiciones de las 10 piezas, con cada mov posible de L
 	succCalc( Q , Pos , PosList2 , Turno , AI ),
-	append( PosList1 , PosList2 , PosList ).
+	append( PosList1 , PosList2 , PosList ). % Regresa una lista de listas con todas las configuraciones posibles del jugador en turno
 
 
 % SUCC se apoya de las dos funciones anteriores y lo que hace es hacer
 % un movimineto, meterlo a una lista y meter como quedan todas las demas
 % posiciones
 
-succ([ Compu , Player ], Turno , PosList , IA ):-
-	IA == 1 ,
-        Turno == 1 ,
-	succCalc( Compu , Compu , Temp , Turno , IA ),
-        distribucionJugadorV(Temp , Player , PosList ),!. %, writeln (PosList).
+% Obtiene TODOS los movimientos posibles de la COMPUTADORA.
+succ([Compu|Players], Turno , PosList , Modo ):-
+	Modo == 1 ,
+    Turno == 1 ,
+	succCalc( Compu , Compu , Temp , Turno , Modo ), %Temp tiene todos las configuraciones posibles de las fichas del jugador en turno. (Lista de listas)
+    nth1(1,Players,JugV),
+    distribucionJugador(Temp , JugV , PosList ),!. % Poslist tiene todas las configuraciones posibles del tablero.
+    %Poslist = [ [Compu1, JugadorV],[Compu2, JugadorV], ...] donde Compu_i y Jugador son listas de parejas [X,Y] de las 10 fichas
 
-succ([ Compu , _ ], Turno , PosList , IA ):-
-	IA == 1 ,
-        Turno == 2 ,
-	succCalc( Compu , Compu , Temp , Turno , IA ),
-	distribucionComputadoraR( Temp , Compu , PosList ). %, writeln (PosList).
-
-succ([ Compu , Player ], Turno , PosList , IA ):-
-	IA == 2 ,
-        Turno == 1 ,
-	succCalc( Player , Player , Temp , Turno , IA ),
-	distribucionComputadoraR( Temp , Compu , PosList ). %, writeln (PosList).
-
-succ([ _ , Player ], Turno , PosList , IA ):-
-	IA == 2 ,
-        Turno == 2 ,
-	succCalc( Player , Player , Temp , Turno , IA ),
-        distribucionJugadorV( Temp , Player , PosList ). %, writeln (PosList).
+% -- Modo de juego 2 jugadores
+% Obtiene TODOS los movimientos posibles del JUGADOR_V.
+succ([Compu|Players], Turno , PosList , Modo ):-
+	Modo == 1 ,
+    Turno == 2 ,
+    nth1(1,Players,Jug),
+	succCalc( Jug , Jug , Temp , Turno , Modo ), %Calcula los posibles escenarios del jugador
+	distribucionComputadoraR( Temp , Compu , PosList ),!. %Obtiene todos los posibles escenarios del tablero
 
 
+% -- Modo de juego 6 jugadores
+% Obtiene TODOS los movimientos posibles del JUGADOR_A.
+succ([Compu|Players], Turno , PosList , Modo ):-
+    Modo == 4 ,
+    Turno == 2 ,
+    nth1(1,Players,Jug),
+    succCalc( Jug , Jug , Temp , Turno , Modo ), %Calcula los posibles escenarios del jugador
+    subtract(Players, Jug, Aux),
+    append(Temp, Aux, Players2),
+    distribucionComputadoraR( Players2 , Compu , PosList ),!. %Obtiene todos los posibles escenarios del tablero
 
+% Obtiene TODOS los movimientos posibles del JUGADOR_B.
+succ([Compu|Players], Turno , PosList , Modo ):-
+    Modo == 4 ,
+    Turno == 3 ,
+    nth1(2,Players,Jug), nth1(1,Players,Jug1),
+    succCalc( Jug , Jug , Temp , Turno , Modo ), %Calcula los posibles escenarios del jugador
+    subtract(Players, Jug, Aux), subtract(Aux, Jug1, Aux2),
+    append(Jug1, Temp, Players2), append(Players2, Aux2, Players3),
+    distribucionComputadoraR( Players3 , Compu , PosList ),!. %Obtiene todos los posibles escenarios del tablero
+
+% Obtiene TODOS los movimientos posibles del JUGADOR_V.
+succ([Compu|Players], Turno , PosList , Modo ):-
+    Modo == 4 ,
+    Turno == 4 ,
+    nth1(3,Players,Jug),nth1(1,Players,Jug1),nth1(2,Players,Jug2),
+    succCalc( Jug , Jug , Temp , Turno , Modo ), %Calcula los posibles escenarios del jugador
+    subtract(Players, Jug, Aux), subtract(Aux, Jug1, Aux2), subtract(Aux2, Jug2, Aux3),
+    append(Jug1, Jug2, Players2), append(Players2, Temp, Players3), append(Players3, Aux3, Players4),
+    distribucionComputadoraR( Players4 , Compu , PosList ),!. %Obtiene todos los posibles escenarios del tablero
+
+% Obtiene TODOS los movimientos posibles del JUGADOR_Z.
+succ([Compu|Players], Turno , PosList , Modo ):-
+    Modo == 4 ,
+    Turno == 5 ,
+    nth1(4,Players,Jug),nth1(5,Players,Jug5),
+    succCalc( Jug , Jug , Temp , Turno , Modo ), %Calcula los posibles escenarios del jugador
+    subtract(Players, Jug, Aux), subtract(Aux, Jug5, Aux2),
+    append(Aux2,Temp,Players2), append(Players2,Jug5,Players3),
+    distribucionComputadoraR( Players3 , Compu , PosList ),!. %Obtiene todos los posibles escenarios del tablero
+
+% Obtiene TODOS los movimientos posibles del JUGADOR_N.
+succ([Compu|Players], Turno , PosList , Modo ):-
+    Modo == 4 ,
+    Turno == 6 ,
+    nth1(5,Players,Jug),
+    succCalc( Jug , Jug , Temp , Turno , Modo ), %Calcula los posibles escenarios del jugador
+    subtract(Players, Jug, Aux),
+    append(Aux,Temp,Players2),
+    distribucionComputadoraR( Players2 , Compu , PosList ),!. %Obtiene todos los posibles escenarios del tablero
 
 
 % ...................MINIMAX CON PODA ALPHA BETA........................
@@ -995,60 +1162,60 @@ min( A , B , A ):-
 min( A , B , B ):-
     A > B.
 
-% Minimax alpha beta: llamada
-minimaxab( Posicion , Turno , Profundidad , MejorMov , Valor , IA ):-
-	succ( Posicion , Turno , X , IA ),% Simulación del movimiento, X = lista de posiciones dispués de jugar
+% ----- Minimax alpha beta: llamada
+minimaxab( Posicion , Turno , Profundidad , MejorMov , Valor , Modo ):-
+	succ( Posicion , Turno , X , Modo ),% Simulación del movimiento, X = lista de posiciones dispués de jugar
 	siguienteJugador( Turno , OtroJugador ), % Cambio de jugador
 	decr( Profundidad , P2 ), % Profundidad de disminución
-	alphabeta( X , OtroJugador , P2 , -999 , 999 , MejorMov , Valor , IA ).  % Alpha y Beta se inicializan a -999 y 999
+	alphabeta( X , OtroJugador , P2 , -999 , 999 , MejorMov , Valor , Modo ).  % Alpha y Beta se inicializan a -999 y 999
 
 
+% alphabeta(ListaTablero, Turno, Profundidad, alpha, beta, MejorMov, Valor, ModoJuego)
+% CASO BASE: Si ya no hay mas jugadores (No hay lista de sus fichas)
 alphabeta( [] , _ , _ , _ , _ , _ , _ , _ ).
 
-alphabeta([ E | L ], 1 , P , A , B , MejorMov , Valor , IA ):-
+% CASO LIMITE DE PROFUNDIDAD MINIMIZA (BUSCA EL MINIMO)
+alphabeta([ E | L ], 1 , P , A , B , MejorMov , Valor , Modo ):-
         testDepth( P , E , 1 ), % hoja final alcanzada o final del juego
-        heur( E , 1 , ValE , IA ), % Evaluación de la posición en ValE
-        (( A =< ValE ,
-           alphabeta( L , 1 , P , A , B , MejorMovL , ValL , IA ),
-           recordMin( ValE , ValL , E , MejorMovL , MejorMov , Valor ));
-        copia( E , ValE , MejorMov , Valor )).  % Memorización de los mejores, o es el y anterior o copiamos lo que teniamos
+        heur( E , 1 , ValE , Modo ), % Evaluación del "tablero E" en ValE
+        (   ( A =< ValE , %if A<=ValE:
+                alphabeta( L , 1 , P , A , B , MejorMovL , ValL , Modo ),
+                recordMin( ValE , ValL , E , MejorMovL , MejorMov , Valor ));%Else:
+            copia( E , ValE , MejorMov , Valor )).  % Memorización de los mejores, o es el y anterior o copiamos lo que teniamos
 
-alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , IA ):-
+% CASO LIMITE DE PROFUNDIDAD MAXIMZA (BUSCA EL MAXIMO)
+alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , Modo ):-
         testDepth( P , E , 2 ),
-        heur( E , 2 , ValE , IA ),
-        (( B >= ValE ,
-           alphabeta( L , 2 , P , A , B , MejorMovL , ValL , IA ),
-           recordMax( ValE , ValL , E , MejorMovL , MejorMov , V ));
-         copia( E , ValE , MejorMov , V )).
+        heur( E , 2 , ValE , Modo ),
+        (   ( B >= ValE ,
+                alphabeta( L , 2 , P , A , B , MejorMovL , ValL , Modo ),
+                recordMax( ValE , ValL , E , MejorMovL , MejorMov , V ));
+                copia( E , ValE , MejorMov , V )).
 
-alphabeta([ E | L ], 1 , P , A , B , MejorMov , V , IA ):-
-        succ( E , 1 , X , IA ),
+alphabeta([ E | L ], 1 , P , A , B , MejorMov , V , Modo ):-
+        succ( E , 1 , X , Modo ),
         not(vacio( X )),
         P \= 0 ,
         decr( P , P2 ),
-        alphabeta( X , 2 , P2 , A , B , MejorMovX , ValX , IA ),
-        (( ValX >= A ,
-           min( ValX , B , Bbis ),
-           alphabeta( L , 1 , P , A , Bbis , MejorMovL , ValL , IA ),
-           recordMin( ValX , ValL , E , MejorMovL , MejorMov , V ));
-         copia( MejorMovX , ValX , MejorMov , V )).
+        alphabeta( X , 2 , P2 , A , B , MejorMovX , ValX , Modo ),
+        (   ( ValX >= A ,
+                min( ValX , B , Bbis ),
+                alphabeta( L , 1 , P , A , Bbis , MejorMovL , ValL , Modo ),
+                recordMin( ValX , ValL , E , MejorMovL , MejorMov , V ));
+            copia( MejorMovX , ValX , MejorMov , V )).
 
 
-alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , IA ):-
-        succ( E , 2 , X , IA ),
+alphabeta([ E | L ], 2 , P , A , B , MejorMov , V , Modo ):-
+        succ( E , 2 , X , Modo ),
         not(vacio( X )),
         P \= 0 ,
         decr( P , P2 ),
-        alphabeta( X , 1 , P2 , A , B , MejorMovX , ValX , IA ),
-        (( ValX =< B ,
-           max( ValX , A , Abis ),
-           alphabeta( L , 2 , P , Abis , B , MejorMovL , ValL , IA ),
-           recordMax( ValX , ValL , E , MejorMovL , MejorMov , V ));
-         copia( MejorMovX , ValX , MejorMov , V )).
-
-
-
-
+        alphabeta( X , 1 , P2 , A , B , MejorMovX , ValX , Modo ),
+        (   ( ValX =< B ,
+                max( ValX , A , Abis ),
+                alphabeta( L , 2 , P , Abis , B , MejorMovL , ValL , Modo ),
+                recordMax( ValX , ValL , E , MejorMovL , MejorMov , V ));
+            copia( MejorMovX , ValX , MejorMov , V )).
 
 
 % .........................Dibujar..............................
@@ -1088,7 +1255,7 @@ draw( A , B ):-
     write(.),
     !.
 draw( _ , _ ):-
-    write(-).
+    write("NaN").
 
 drawTablero:-
     drawLinea17,
@@ -1166,10 +1333,10 @@ write('             '),draw(1,4),write(' '),draw(2,4),write(' '),draw(3,4),write
 
 
 % Llamar para jugar la computadora
-
-jugarComputadoraR( IA ):-
-    tableroPos( Pos ),
-    minimaxab( Pos , 1 , 2 , MejorMov , _ , IA ),
+jugarComputadoraR( Modo ):-
+    tty_clear,
+    tableroPos( Pos, Modo ),
+    minimaxab( Pos , 1 , Modo , MejorMov , _ , 1 ),
     !,
     retractall(computadoraR( _ , _ )),
     nth1( 1 , MejorMov , Mejor ),
@@ -1182,78 +1349,106 @@ jugarComputadoraR( IA ):-
 
         ),
     tty_clear,
-	drawTablero,
-        !.
+    drawTablero,
+    modoJuego(M),
+    (   (M==1, writeln("Turno del VERDE"));
+        (M==2, writeln("Turno del BLANCO"));
+        (M==3, writeln("Turno del AMARILLO"));
+        (M==4, writeln("Turno del AMARILLO"))
+        ),!.
 
-
-jugarJugadorV( IA ):-
-    tableroPos( Pos ),
-    minimaxab( Pos , 1 , 2 , MejorMov , _ , IA ),
-    ! ,
-    retractall(jugadorV( _ , _ )),
-    nth1( 2 , MejorMov , Mejor ),
-	forall(
-            miembro( Elem , Mejor ),
-            (
-			nth1( 1 , Elem , X1 ), nth1( 2 , Elem , Y1 ), assert(jugadorV( X1 , Y1 ))
-            )
-	),
-	drawTablero,
-        ! .
-
-
-
-
-% -- Mover JugadorVerde
+% -- Mover las fichas
 %
-moverJugadorV( X1 , Y1 , X2 , Y2 ):-
-    jugadorV( X1 , Y1 ),
-    movVal( X1 , Y1 , X2 , Y2 ),
-    retract(jugadorV( X1 , Y1 )),
-    assert(jugadorV( X2 , Y2 )),
-    jugarComputadoraR(1),
-    !.
-
-% -- Mover Computadora Roja
+% -- Mover Computadora ROJA
 moverComputadoraR( X1 , Y1 , X2 , Y2 ):-
+    tty_clear,
     computadoraR( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
     retract(computadoraR( X1 , Y1 )),
     assert(computadoraR( X2 , Y2 )),
+    modoJuego(M),
+    drawTablero,
+    (   (M==1, writeln("Turno del VERDE"));
+        (M==2, writeln("Turno del BLANCO"));
+        (M==3, writeln("Turno del AMARILLO"));
+        (M==4, writeln("Turno del AMARILLO"))
+        ),
     !.
 
+ % -- Mover Jugador VERDE   
+moverJugadorV( X1 , Y1 , X2 , Y2 ):-
+    tty_clear,
+    jugadorV( X1 , Y1 ),
+    movVal( X1 , Y1 , X2 , Y2 ),
+    retract(jugadorV( X1 , Y1 )),
+    assert(jugadorV( X2 , Y2 )),
+    modoJuego(M),
+    drawTablero,
+    (   (M==1, jugarComputadoraR(1));
+        (M==3, writeln("Turno del AZUL"));
+        (M==4, writeln("Turno del AZUL"))
+        ),
+    !.
+
+% -- Mover Jugador AMARILLO
 moverJugadorA( X1 , Y1 , X2 , Y2 ):-
+    tty_clear,
     jugadorA( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
     retract(jugadorA( X1 , Y1 )),
     assert(jugadorA( X2 , Y2 )),
+    modoJuego(M),
+    drawTablero,
+    (   (M==3, writeln("Turno del VERDE"));
+        (M==4, writeln("Turno del BLANCO"))
+        ),
     !.
 
+% -- Mover Jugador BLANCO
 moverJugadorB( X1 , Y1 , X2 , Y2 ):-
+    tty_clear,
     jugadorB( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
     retract(jugadorB( X1 , Y1 )),
     assert(jugadorB( X2 , Y2 )),
+    modoJuego(M),
+    drawTablero,
+    (   (M==2, writeln("Turno del AZUL"));
+        (M==4, writeln("Turno del VERDE"))
+        ),
     !.
 
+% -- Mover Jugador NEGRO
 moverJugadorN( X1 , Y1 , X2 , Y2 ):-
+    tty_clear,
     jugadorB( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
     retract(jugadorB( X1 , Y1 )),
     assert(jugadorB( X2 , Y2 )),
+    modoJuego(M),
+    drawTablero,
+    (   (M==4, jugarComputadoraR(1))
+        ),
     !.
 
-
-
-
-
-% para ver un partido entre 2 IA
-juegoIA:-
-    repeat,
-    jugarComputadoraR( 1 ),
-    jugarJugadorV( 2 ).
+% -- Mover Jugador AZUL
+moverJugadorZ( X1 , Y1 , X2 , Y2 ):-
+    tty_clear,
+    jugadorZ( X1 , Y1 ),
+    movVal( X1 , Y1 , X2 , Y2 ),
+    retract(jugadorZ( X1 , Y1 )),
+    assert(jugadorZ( X2 , Y2 )),
+    modoJuego(M),
+    drawTablero,
+    (   (M==2, jugarComputadoraR(1));
+        (M==3, jugarComputadoraR(1));
+        (M==4, writeln("Turno del NEGRO"))
+        ),
+    !.
 
 newGame:-
+    tty_clear,
+    retract(modoJuego(_)),
     retractall(computadoraR( _ ,_ )),
     retractall(jugadorV( _ , _ )),
     retractall(jugadorB( _ , _ )),
@@ -1261,6 +1456,62 @@ newGame:-
     retractall(jugadorN( _ , _ )),
     retractall(jugadorA( _ , _ )),
 
+    writeln("************************************"),
+    writeln("            DAMAS CHINAS"),
+    writeln("************************************"),
+    writeln(" "),
+    writeln("Selecciona la opción deseada para jugar:"),
+    writeln("-> Escribe el número correspondiente seguido de un punto (.) <-"),
+    writeln("NOTA: La computadora siempre mueve las fichas ROJAS "),
+    writeln("1. 1H - 1C"),
+    writeln("2. 2H - 1C"),
+    writeln("3. 3H - 1C"),
+    writeln("4. 5H - 1C"),
+    read(X),
+    tty_clear,
+    iniciarJuego(X).
+
+
+iniciarJuego(X):-
+    X==1,
+    inicialRojo,
+    inicialVerde,
+    assert(modoJuego(1)),
+    drawTablero,
+    writeln("Turno del VERDE"),!.
+
+iniciarJuego(X):-
+    X==2,
+    inicialRojo,
+    inicialBlanco,
+    inicialAzul,
+    assert(modoJuego(2)),
+    drawTablero,
+    writeln("Turno del BLANCO"),!.
+
+iniciarJuego(X):-
+    X==3,
+    inicialRojo,
+    inicialVerde,
+    inicialAmarillo,
+    inicialAzul,
+    assert(modoJuego(3)),
+    drawTablero,
+    writeln("Turno del AMARILLO"),!.
+
+iniciarJuego(X):-
+    X==4,
+    inicialRojo,
+    inicialVerde,
+    inicialAzul,
+    inicialNegro,
+    inicialBlanco,
+    inicialAmarillo,
+    assert(modoJuego(4)),
+    drawTablero,
+    writeln("Turno del AMARILLO"),!.
+
+inicialRojo:-
     assert(computadoraR( 1 , 17 )),
     assert(computadoraR( 1 , 16 )),
     assert(computadoraR( 2 , 16 )),
@@ -1270,8 +1521,9 @@ newGame:-
     assert(computadoraR( 1 , 14 )),
     assert(computadoraR( 2 , 14 )),
     assert(computadoraR( 3 , 14 )),
-    assert(computadoraR( 4 , 14 )),
+    assert(computadoraR( 4 , 14 )).
 
+inicialVerde:-
     assert(jugadorV( 1 , 1 )),
     assert(jugadorV( 1 , 2 )),
     assert(jugadorV( 2 , 2 )),
@@ -1281,8 +1533,9 @@ newGame:-
     assert(jugadorV( 1 , 4 )),
     assert(jugadorV( 2 , 4 )),
     assert(jugadorV( 3 , 4 )),
-    assert(jugadorV( 4 , 4 )),
+    assert(jugadorV( 4 , 4 )).
 
+inicialAmarillo:-
     assert(jugadorA( -3 , 13 )),
     assert(jugadorA( -2 , 13 )),
     assert(jugadorA( -1 , 13 )),
@@ -1292,8 +1545,9 @@ newGame:-
     assert(jugadorA( 0 , 12 )),
     assert(jugadorA( -1 , 11 )),
     assert(jugadorA( 0 , 11 )),
-    assert(jugadorA( 0 , 10 )),
+    assert(jugadorA( 0 , 10 )).
 
+inicialBlanco:-
     assert(jugadorB( 0 , 8 )),
     assert(jugadorB( 0 , 7 )),
     assert(jugadorB( -1 , 7 )),
@@ -1303,8 +1557,9 @@ newGame:-
     assert(jugadorB( 0 , 5 )),
     assert(jugadorB( -1 , 5 )),
     assert(jugadorB( -2 , 5 )),
-    assert(jugadorB( -3 , 5 )),
+    assert(jugadorB( -3 , 5 )).
 
+inicialAzul:-
     assert(jugadorZ( 6 , 5 )),
     assert(jugadorZ( 7 , 5 )),
     assert(jugadorZ( 8 , 5 )),
@@ -1314,8 +1569,9 @@ newGame:-
     assert(jugadorZ( 9 , 6 )),
     assert(jugadorZ( 8 , 7 )),
     assert(jugadorZ( 9 , 7 )),
-    assert(jugadorZ( 9 , 8 )),
+    assert(jugadorZ( 9 , 8 )).
 
+inicialNegro:-
     assert(jugadorN( 6 , 13 )),
     assert(jugadorN( 7 , 13 )),
     assert(jugadorN( 8 , 13 )),
@@ -1325,23 +1581,9 @@ newGame:-
     assert(jugadorN( 9 , 12 )),
     assert(jugadorN( 8 , 11 )),
     assert(jugadorN( 9 , 11 )),
-    assert(jugadorN( 9 , 10 )),
+    assert(jugadorN( 9 , 10 )).
 
-    drawTablero.
+    
 
-menu:-
-    writeln("DAMAS CHINAS"),
-    writeln("Selecciona la opción deseada para jugar"),
-    writeln("1. 1H - 1C"),
-    writeln("2. 3H - 1C"),
-    writeln("3. 5H - 1C"),
-    writeln("4. Salir"),
-    read(X),
-    iniciarJuego(X).
-
-iniciarJuego(X):-
-    X==1,
-    writeln("Modo 1 jugador vs computadora"),
-    newGame.
 
 
