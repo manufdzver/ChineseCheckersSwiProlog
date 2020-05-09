@@ -1686,7 +1686,7 @@ write('             '),draw(1,4),write(' '),draw(2,4),write(' '),draw(3,4),write
 jugarComputadoraR( Modo ):-
     cls, % Limpia la pantalla
     tableroPos( Pos, Modo ), %Obtiene las posiciones de todas las fichas del tablero.
-    minimaxab( Pos , 1 , 2 , MejorMov , _ , 1 ), %Aplica la búsqueda minimax y encuentra la configuración óptima del tablero.
+    minimaxab( Pos , 1 , 2 , MejorMov , _ , Modo ), %Aplica la búsqueda minimax y encuentra la configuración óptima del tablero.
     !,
     retractall(computadoraR( _ , _ )), % Elimina todas las fichas de la computadora
     nth1( 1 , MejorMov , Mejor ), % Toma las fichas de la computadora del tablero óptimo encontrado
@@ -1710,9 +1710,9 @@ jugarComputadoraR( Modo ):-
 %
 % Mover Computadora ROJA
 moverComputadoraR( X1 , Y1 , X2 , Y2 ):-
-    cls, %Limpia la pantalla
     computadoraR( X1 , Y1 ), %Revisa si existe la ficha Roja en la posicion X1, Y1.
     movVal( X1 , Y1 , X2 , Y2 ), %Revisa si el movimiento es válido.
+    cls, %Limpia la pantalla
     retract(computadoraR( X1 , Y1 )),
     assert(computadoraR( X2 , Y2 )), %Realiza el movimiento
     not(finDeljuego), %Pregunta si alguien ya ganó.
@@ -1728,9 +1728,9 @@ moverComputadoraR( X1 , Y1 , X2 , Y2 ):-
  % Mover Jugador VERDE 
  % Igual que el caso anterior pero con las fichas VERDES  
 moverJugadorV( X1 , Y1 , X2 , Y2 ):-
-    cls,
     jugadorV( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
+    cls,
     retract(jugadorV( X1 , Y1 )),
     assert(jugadorV( X2 , Y2 )),
     not(finDeljuego),
@@ -1745,9 +1745,9 @@ moverJugadorV( X1 , Y1 , X2 , Y2 ):-
 % -- Mover Jugador AMARILLO
 % Igual que el caso anterior pero con las fichas AMARILLAS  
 moverJugadorA( X1 , Y1 , X2 , Y2 ):-
-    cls,
     jugadorA( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
+    cls,
     retract(jugadorA( X1 , Y1 )),
     assert(jugadorA( X2 , Y2 )),
     not(finDeljuego),
@@ -1761,9 +1761,9 @@ moverJugadorA( X1 , Y1 , X2 , Y2 ):-
 % -- Mover Jugador MORADO
 % Igual que el caso anterior pero con las fichas MORADO  
 moverJugadorB( X1 , Y1 , X2 , Y2 ):-
-    cls,
     jugadorB( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
+    cls,
     retract(jugadorB( X1 , Y1 )),
     assert(jugadorB( X2 , Y2 )),
     not(finDeljuego),
@@ -1777,9 +1777,9 @@ moverJugadorB( X1 , Y1 , X2 , Y2 ):-
 % -- Mover Jugador NEGRO
 % Igual que el caso anterior pero con las fichas NEGRO  
 moverJugadorN( X1 , Y1 , X2 , Y2 ):-
-    cls,
     jugadorB( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
+    cls,
     retract(jugadorB( X1 , Y1 )),
     assert(jugadorB( X2 , Y2 )),
     not(finDeljuego),
@@ -1792,9 +1792,9 @@ moverJugadorN( X1 , Y1 , X2 , Y2 ):-
 % -- Mover Jugador AZUL
 % Igual que el caso anterior pero con las fichas AZUL  
 moverJugadorZ( X1 , Y1 , X2 , Y2 ):-
-    cls,
     jugadorZ( X1 , Y1 ),
     movVal( X1 , Y1 , X2 , Y2 ),
+    cls,
     retract(jugadorZ( X1 , Y1 )),
     assert(jugadorZ( X2 , Y2 )),
     not(finDeljuego),
@@ -1961,8 +1961,8 @@ miembro( X , [ _ | L ]):-
 
 % Limpiar pantalla 
 cls :- 
-    %tty_clear.
-    write('\e[2J').
+    tty_clear.
+    %write('\e[2J').
     
 
 
