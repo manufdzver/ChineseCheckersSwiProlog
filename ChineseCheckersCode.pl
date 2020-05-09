@@ -582,6 +582,8 @@ salto3Fact(X1,Y1,X2,Y2):-
     Y3 is Y2+2, %Destino del salto doble esta arriba del destino final
     (   (salto2Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2)); 
         (X3 is X2-2, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto2Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
     ),!.% La X final puede ser la misma o variar por 2 con respecto a
         % la x del último salto
@@ -643,6 +645,8 @@ salto4Fact(X1,Y1,X2,Y2):-
     Y3 is Y2+2, %Origen está más arriba que destino
     (   (salto3Fact(X1,Y1,X2,Y3),saltoFact(X2,Y3,X2,Y2));
         (X3 is X2-2, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
     ),!. % La X final puede ser la misma o variar por 2 con respecto a
          % la x del último salto
@@ -667,6 +671,8 @@ salto4Fact(X1,Y1,X2,Y2):-
     Y3 is Y2-2,
     (   (salto3Fact(X1,Y1,X2,Y3),saltoFact(X2,Y3,X2,Y2));
         (X3 is X2-2, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2-1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto3Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto3Fact(X1,Y1,X3,Y3),saltoFact(X3,Y3,X2,Y2))
     ),!.
 
@@ -695,20 +701,24 @@ salto5Fact(X1,Y1,X2,Y2):-
 %
 % BAJANDO
 % 
-% No importa donde sea el origen, el último salto no cruzará la fila 9
+% Análogo a los anteriores
 salto5Fact(X1,Y1,X2,Y2):-
     Y3 is Y2+2, % Origen está mas arriba que destino
     (   (salto4Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2-1, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
     ),!. % la X del destino puede ser la misma o disminuir en 2
          % con respecto al último salto
 
 % SUBIENDO
 % 
-% No importa donde sea el origen, el último salto no cruzará la fila 9
+%Analogo a BAJANDO, pero con Y origen menor que Y destino
 salto5Fact(X1,Y1,X2,Y2):-
     Y3 is Y2-2, % Origen está más abajo que destino
     (   (salto4Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2-1, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto4Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
     ),!.% la X del destino puede ser la misma o crecer en 2
         % con respecto al último salto
@@ -733,6 +743,8 @@ salto6Fact(X1,Y1,X2,Y2):-
 salto6Fact(X1,Y1,X2,Y2):-
     Y3 is Y2+2, % Origen está mas arriba que destino
     (   (salto5Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2-1, salto5Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto5Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto5Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
     ),!. % la X del destino puede ser la misma o disminuir en 2
          % con respecto al último salto
@@ -743,6 +755,8 @@ salto6Fact(X1,Y1,X2,Y2):-
 salto6Fact(X1,Y1,X2,Y2):-
     Y3 is Y2-2, % Origen está más abajo que destino
     (   (salto5Fact(X1,Y1,X2,Y3), saltoFact(X2,Y3,X2,Y2));
+        (X3 is X2-1, salto5Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
+        (X3 is X2+1, salto5Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2));
         (X3 is X2+2, salto5Fact(X1,Y1,X3,Y3), saltoFact(X3,Y3,X2,Y2))
     ),!.% la X del destino puede ser la misma o crecer en 2
         % con respecto al último salto
@@ -1032,7 +1046,7 @@ distMetaBN(X, Y, Dist):-
 % Se aplica la heurística a la pieza en la posición X,Y
 heurAPiezaComputadoraR( X , Y , Val ):-
     distCentro( X , Y , Dist ),
-    Val is (( 18 - Y ) * 4 - Dist * 3 ).
+    Val is (( 18 - Y ) * 7 - Dist * 1 ).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -1672,7 +1686,7 @@ write('             '),draw(1,4),write(' '),draw(2,4),write(' '),draw(3,4),write
 jugarComputadoraR( Modo ):-
     cls, % Limpia la pantalla
     tableroPos( Pos, Modo ), %Obtiene las posiciones de todas las fichas del tablero.
-    minimaxab( Pos , 1 , Modo , MejorMov , _ , 1 ), %Aplica la búsqueda minimax y encuentra la configuración óptima del tablero.
+    minimaxab( Pos , 1 , 2 , MejorMov , _ , 1 ), %Aplica la búsqueda minimax y encuentra la configuración óptima del tablero.
     !,
     retractall(computadoraR( _ , _ )), % Elimina todas las fichas de la computadora
     nth1( 1 , MejorMov , Mejor ), % Toma las fichas de la computadora del tablero óptimo encontrado
@@ -1683,8 +1697,8 @@ jugarComputadoraR( Modo ):-
          ) % Se obtienen las coordenadas X y Y, 
 
         ),
-    drawTablero, %Dibuja el tablero con el nuevo movimiento
     not(finDeljuego), %Pregunta si alguien ya ganó.
+    drawTablero, %Dibuja el tablero con el nuevo movimiento
     modoJuego(M), %Segun el modo de juego, indica el siguiente turno.
     (   (M==1, writeln("Turno del VERDE"));
         (M==2, writeln("Turno del BLANCO"));
@@ -1947,7 +1961,7 @@ miembro( X , [ _ | L ]):-
 
 % Limpiar pantalla 
 cls :- 
-    %%cls.
+    %tty_clear.
     write('\e[2J').
     
 
