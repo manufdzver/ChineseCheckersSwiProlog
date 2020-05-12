@@ -1046,7 +1046,8 @@ distMetaBN(X, Y, Dist):-
 % Se aplica la heurística a la pieza en la posición X,Y
 heurAPiezaComputadoraR( X , Y , Val ):-
     distCentro( X , Y , Dist ),
-    Val is (( 18 - Y ) * 7 - Dist * 1 ).
+    %((Y<5, Aj is 10);(Aj is 0)),
+    Val is (( 18 - Y ) *4 - Dist * 2 ).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -1063,7 +1064,7 @@ heurComputadoraRAvanza([ T | Q ], Val ):-
 % Se aplica la heurística a la pieza en la posición X,Y
 heurAPiezaJugadorV( X , Y , Val ):-
     distCentro( X , Y , Dist ),
-    Val is ((Y*4) - (Dist*3)).
+    Val is ((Y*4) - (Dist*2)).
 
 % Suma el total de las evaluaciones de cada pieza para evaluar su situación
 % => Valor total jugador = Suma(Valor de cada pieza).
@@ -1250,12 +1251,12 @@ espaciosDisponiblesJugadorV( X , Y , M ):-
     saltosExtra(M2,M3),
     saltosExtra(M3,M4),
     saltosExtra(M4,M5),
-    saltosExtra(M5,M6),
+    %saltosExtra(M5,M6),
     union(M1,M2,R12),
     union(R12,M3,R123),
     union(R123,M4,R1234),
-    union(R1234,M5,R12345),
-    union(R12345,M6,Maux),
+    union(R1234,M5,Maux),
+    %union(R12345,M6,Maux),
     union(Maux,Mp,Mres),
     subtract(Mres,[[X,Y]],M).
 
@@ -1530,7 +1531,8 @@ vacio([]).
 
 % Si ya llegó a la profundidad máxima.
 testDepth( P , _ , _ ):-
-    P  ==  0.
+    P  ==  0;
+    finDeljuego.
 
 % Regresa máximo entre A y B
 max( A , A , A ).
@@ -1684,7 +1686,6 @@ write('             '),draw(1,4),write(' '),draw(2,4),write(' '),draw(3,4),write
 % A) Llama al juego de la computadora
 %
 jugarComputadoraR( Modo ):-
-    cls, % Limpia la pantalla
     tableroPos( Pos, Modo ), %Obtiene las posiciones de todas las fichas del tablero.
     minimaxab( Pos , 1 , 2 , MejorMov , _ , Modo ), %Aplica la búsqueda minimax y encuentra la configuración óptima del tablero.
     !,
@@ -1698,6 +1699,7 @@ jugarComputadoraR( Modo ):-
 
         ),
     not(finDeljuego), %Pregunta si alguien ya ganó.
+    cls, % Limpia la pantalla
     drawTablero, %Dibuja el tablero con el nuevo movimiento
     modoJuego(M), %Segun el modo de juego, indica el siguiente turno.
     (   (M==1, writeln("Turno del VERDE"));
@@ -1961,8 +1963,8 @@ miembro( X , [ _ | L ]):-
 
 % Limpiar pantalla 
 cls :- 
-    tty_clear.
-    %write('\e[2J').
+    %tty_clear.
+    write('\e[2J').
     
 
 
